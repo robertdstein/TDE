@@ -66,10 +66,19 @@ with open(varpath, 'rb') as csvfile:
 		print "In total", key, "data with requirement", channel, "=", value,"was provided for", str(len(accepted)), "TDE candidates." 
 		print "Not provided for", str(nreject), "further entries. \n"
 		
-		plt.figure()
+		fig = plt.figure()
 		npoints = len(accepted)
 		nrows = int(float(npoints)/2.) + (npoints % 2)
+		for i in range(0, npoints):
+			plt.subplot(nrows,2, i+1)
+			plt.title(accepted[i])
+			plt.scatter(alltimes[i], allydata[i])
+			plt.gca().invert_yaxis()
+			plt.xlabel("time")
+			plt.ylabel("Magnitude")
 		
 		print npoints, nrows
+		fig.set_size_inches(25, 15)
+		plt.savefig("graphs/"+variable+"_"+channel+"="+value+".pdf")
 		
 		
