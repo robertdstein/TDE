@@ -4,10 +4,24 @@ import datetime
 import matplotlib
 import numpy as np
 from astropy.time import Time
+from astropy import constants as const
+from astropy.coordinates import SkyCoord
+from astropy import units as u
 import matplotlib.pyplot as plt
 
 minpoints = 3
 
+def wrapAround180(ra_deg):
+    ra = np.deg2rad(ra_deg)
+    ra[ra > np.pi] -= 2*np.pi
+    return ra
+				
+def magtolum(absmag):
+	solarlum = 3.826 * 10**33
+	solarabsmag = 4.75
+	exponent = (solarabsmag - float(absmag))/2.5
+	lum = solarlum * 10 **(exponent)
+	return lum
 
 class Full_set:
 	"""The full set of all TDE candidates
@@ -142,6 +156,38 @@ class Full_set:
 			tde = getattr(self.TDEs, name)
 			if tde.has_spectra:
 				tde.plot_spectrum()
+				
+	def plot_skymap(self):
+		ra=[]
+		dec = []
+		rs=[]
+		markers=[]
+		
+		for name in vars(self.TDEs):
+			tde = getattr(self.TDEs, name)
+			if hasattr(tde, "ra_deg") and hasattr(tde, "redshift"):
+				ra.append(float(tde.ra_deg))
+				dec.append(float(tde.dec_deg))
+				rs.append(float(tde.redshift.value))
+				if tde.best:
+					markers.append("*")
+				else:
+					markers.append("o")
+		
+		
+		plt.figure()
+		plt.subplot(111, projection="aitoff")
+		
+		cm = plt.cm.get_cmap('RdYlGn_r')
+		sc = plt.scatter(wrapAround180(ra),np.deg2rad(dec),c=rs, s=35, cmap=cm)
+		cbar = plt.colorbar(sc)
+		cbar.set_label('Redshift(z)')
+		plt.show()
+		
+		path = "graphs/skymap.pdf"
+		print "Saving to", path
+		plt.savefig(path)
+		plt.close()
 		
 class container:
 	"""A container for new data
@@ -178,19 +224,34 @@ class TDE_Candidate:
 		if hasattr(self, "ra") and hasattr(self, "dec"):			
 			self.ra_float = get_degrees(self.ra.value)
 			self.dec_float = get_degrees(self.dec.value)
+			c = SkyCoord(self.ra.value, self.dec.value, unit=(u.hourangle, u.deg))
+			self.ra_deg = c.ra.degree
+			self.dec_deg = c.dec.degree
+			
 	
 	def isbest(self):
+		self.check_xray()
 		if self.has_photometry:
 			if hasattr(self, "mjdmax") and hasattr(self, "mjdvismax"):
 				if self.nbands > 2.0:
 					self.best=True
 	
 	def mjd_time(self):
+		if hasattr(self, "discoverdate"):
+			val = self.discoverdate.value.split("/")
+			if len(val)==3:
+				[y, m, d] = val
+				d = d.split(".")[0]
+				discdate = y+"-"+m+ "-"+ d+"T00:00:00"
+				t = Time(discdate)
+				setattr(self, "mjddisc", float(t.mjd))
+		
 		if hasattr(self, "maxdate"):
 			[y, m, d] = self.maxdate.value.split("/") 
 			maxdate = y+"-"+m+ "-"+ d+"T00:00:00"
 			t = Time(maxdate)
 			setattr(self, "mjdmax", float(t.mjd))
+
 		if hasattr(self, "maxvisualdate"):
 			[y, m, d] = self.maxvisualdate.value.split("/") 
 			maxdate = y+"-"+m+ "-"+ d+"T00:00:00"
@@ -237,13 +298,59 @@ class TDE_Candidate:
 		
 		self.bandlist = bandlist
 		self.varlist = varlist
-		#~ print self.name, self.bandlist, self.varlist
 		self.photometry = allbands
 		self.nbands = float(len(bandlist))
-		#~ print vars(allbands)
 		for band in vars(allbands):
 			if len(getattr(self.photometry, band)) > minpoints:
 				self.has_photometry = True
+				
+	def check_xray(self):
+		xrband = "X-Ray (0.3-2.0) keV"
+		if hasattr(self, "bandlist"):
+			if xrband in self.bandlist:
+				time, y, upt, upy, md = self.return_photometry_dataset(xrband, "luminosity")
+				if (len(time) + len(upt) > 2) and (time != []):
+#					print self.name
+					
+					if hasattr(self, "maxabsmag") & hasattr(self, "mjdmax"):
+						maxabs = self.maxabsmag.value
+						maxlum = magtolum(maxabs)
+#						print "Max Lum", maxlum, max(y), "Mag", maxabs
+						maxtime = self.mjdmax
+					
+					else:
+						maxlum = float(max(y))
+						maxtime = time[y.index(maxlum)]				
+					
+					ratiotest=False					
+					
+					lum = maxlum
+#					tbest = 0.0
+					
+					for i in range(len(upt)):
+						t = upt[i]
+						if t < (maxtime - 20):
+							lum = upy[i]
+#							print lum	, t						
+					
+#					print maxlum, maxtime, "\n \n", lum, "\n \n"
+					
+					if float(maxlum)/float(lum) > 100:
+						ratiotest = True
+					
+					if ratiotest:
+						print self.name, "has passed the ratiotest", float(maxlum)/float(lum)
+						
+					
+								
+#					if ratiotest:
+#						print self.name, "Found measurements before maximum at least two orders of magnitude smaller"
+					
+					#~ def curve(x, a, b, c):
+						#~ return a * ((x-starttime)**b) +c
+					
+					#~ popt, pcov = curve_fit(curve, t, y)
+					#~ print popt, pcov, popt[0]
 				
 	def spectrum(self):
 		if hasattr(self, "spectra"):
@@ -251,7 +358,6 @@ class TDE_Candidate:
 				self.has_spectra = True
 			
 	def plot_spectrum(self):
-		
 		if self.has_spectra:
 			plt.figure()
 			
@@ -274,7 +380,6 @@ class TDE_Candidate:
 				title += " [z =" + str(spec.redshift)+ "]"
 			if hasattr(self, "mjdmax") & hasattr(spec, "time"):
 				time_after_max = int(float(spec.time) - float(self.mjdmax))
-				
 				if time_after_max < 0:
 					title += " [" + str(-1 * time_after_max) +" days before max]"
 				else:
@@ -285,7 +390,6 @@ class TDE_Candidate:
 			path = "graphs/spectra/"+self.name+".pdf"
 			print "Saving to", path
 			plt.savefig(path)
-				
 			plt.close()
 				
 	def return_photometry_dataset(self, band, var):
@@ -320,7 +424,7 @@ class TDE_Candidate:
 						time.append(float(t))
 			return time, y, upt, upy, md
 		else:
-			return None, None, None
+			return None, None, None, None, None
 			
 	def plot_candidate(self):
 		if self.has_photometry:
@@ -351,7 +455,7 @@ class TDE_Candidate:
 				
 			scatter_plot(folder, title, allt, ally, allupt, allupy, labels, variables, maxdate, sharex=True)
 		else:
-			"No photometry was found for", self.name		
+			"No photometry was found for", self.name
 		
 def scatter_plot(folder, title, allt, ally, allupt, allupy,labels, variables, maxdate, sharex=False):
 	fig = plt.figure()
@@ -450,10 +554,3 @@ def get_degrees(time_str):
 			return -(abs(float(arcm)/60.)+(float(arcs)/3600.))
 		else:
 			return ((float(arcm)/60.)+(float(arcs)/3600.))
-	
-	
-	
-	
-		
-		
-		
