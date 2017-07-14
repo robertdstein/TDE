@@ -3,6 +3,7 @@ import json
 import datetime
 import matplotlib
 import numpy as np
+from scipy.optimize import curve_fit
 from astropy.time import Time
 from astropy import constants as const
 from astropy.coordinates import SkyCoord
@@ -331,7 +332,7 @@ class TDE_Candidate:
 						t = upt[i]
 						if t < (maxtime - 20):
 							lum = upy[i]
-#							print lum	, t						
+#							print lum	, t
 					
 #					print maxlum, maxtime, "\n \n", lum, "\n \n"
 					
@@ -340,17 +341,27 @@ class TDE_Candidate:
 					
 					if ratiotest:
 						print self.name, "has passed the ratiotest", float(maxlum)/float(lum)
-						
 					
+					fitt=[]
+					fity=[]
+					for i in range(len(time)):
+						t = time[i]
+						if float(t) > maxtime:
+							fitt.append(np.log(t - maxtime))
+							fity.append(np.log(float(y[i])))
+						
 								
 #					if ratiotest:
 #						print self.name, "Found measurements before maximum at least two orders of magnitude smaller"
 					
-					#~ def curve(x, a, b, c):
-						#~ return a * ((x-starttime)**b) +c
-					
-					#~ popt, pcov = curve_fit(curve, t, y)
-					#~ print popt, pcov, popt[0]
+					if len(fitt) > 2:
+#						print fitt, fity
+						
+						def curve(x, a, b):
+							return x* a + b
+						
+						popt, pcov = curve_fit(curve, fitt, fity, method="trf", bounds=(0, np.inf))
+						print popt, pcov
 				
 	def spectrum(self):
 		if hasattr(self, "spectra"):
@@ -536,10 +547,6 @@ def histograms_plot(titles, xlabels, values):
 	plt.savefig(path)
 	print "Saving to", path
 	plt.close()
-	
-#def get_sec(time_str):
-#	h, m, s = time_str.split(':')
-#	return int(h) * 3600 + int(m) * 60 + int(s)
 				
 def get_degrees(time_str):
 	if time_str.count(':') >1 :
