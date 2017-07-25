@@ -375,13 +375,13 @@ class TDE_Candidate:
 							time.append(float(t))
 							meansigma = 0.5*(float(entry["e_upper_luminosity"]) + float(entry["e_lower_luminosity"]))
 							if meansigma==0.0:
-								meansigma = 0.5*lum
+								sigma.append(0.5*lum)
 								upsig.append(0.5*lum)
 								lowersig.append(0.5*lum)
-								
-							sigma.append(meansigma)
-							upsig.append(float(entry["e_upper_luminosity"]))
-							lowersig.append(float(entry["e_lower_luminosity"]))
+							else:
+								sigma.append(meansigma)
+								upsig.append(float(entry["e_upper_luminosity"]))
+								lowersig.append(float(entry["e_lower_luminosity"]))
 					
 				if len(y) > 0:
 					maxlum = float(max(y))
@@ -456,7 +456,11 @@ class TDE_Candidate:
 						
 						fitt = np.array(fitt)
 						fity = np.array(fity)
+						fitup = np.array(fitup)
+						fitdown=np.array(fitdown)
 						fitsig = np.array(zip(fitup, fitdown))
+						
+#						fitsig=np.array(fitsig)
 						
 #						print fity, fitt, fitup, fitdown
 #						raw_input("prompt")
@@ -472,7 +476,7 @@ class TDE_Candidate:
 						
 						scale = np.log10(maxtime  - lastt)			
 						
-						offset = np.logspace(0, scale, num=200)
+						offset = np.logspace(0, scale, num=100)
 #						offset = np.array(range())
 #						print "Range", offset
 						
@@ -482,7 +486,6 @@ class TDE_Candidate:
 #								starttime = self.mjdmax
 							
 							newt = fitt-starttime
-							logfitt = np.log10(newt)
 							
 							def indices(y,model):
 								if y > model:
@@ -496,22 +499,21 @@ class TDE_Candidate:
 							def fitfunc(p, x):
 								return (p[0]*(x**p[1]))
 								
-							def err(indices, errs):
-								return errs[indices]
-								
-							verr = vectorize(err)
-								
 							def llh(p, x, y, err2):
 								model = fitfunc(p, x)
 								err_indices = vfunc(y, model)
-								err_range = np.arange(len(err_indices))
-								print err_indices, err_range
-								err = verr(err_indices, err2)
-								print err2, err
-								raw_input("prompt")
+								err = []
+								for j in range(len(err_indices)):
+									err.append(err2[j][err_indices[j]])
+								err= np.array(err)
 								llh = ((y - model)/err)**2
 								return llh
-							
+								
+#							def llh(p, x, y, err):
+#								model = fitfunc(p, x)
+#								llh = ((y - model)/err)**2
+#								return llh
+
 							pinit = [maxlum, -1.0]
 							out = optimize.leastsq(llh, pinit,
 							                       args=(newt, fity, fitsig), full_output=1)
@@ -572,18 +574,22 @@ class TDE_Candidate:
 						def fit(x):
 							return bestparams[0] * (x**bestparams[1])
 						
-						plt.title("Minimum occurs at " + str(int(time)) + " MJD (" + str(int(offset[index]))+" days before date of observed maximum, with 1 " r"$\sigma$ range of " + str(int(lower)) + " to "+ str(int(upper)) + " days before maximum)")							
+						plt.title("Minimum occurs at " + str(int(time)) + " MJD (" + str(int(offset[index]))+" days before date of observed maximum, with 1 " r"$\sigma$ range of " + str(int(lower)) + " to "+ str(int(upper)) + " days before maximum")						
+						ax3 = plt.subplot(313)
+						
 						if type(covar) != type(None):							
 							ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " +/- " + str(math.sqrt(np.abs(covar[1][1]))), xy=(0.05, 0.1), xycoords="axes fraction")
+							ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " +/- " + str(math.sqrt(np.abs(covar[0][0]))), xy=(0.05, 0.1), xycoords="axes fraction")
 						else:
 							ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
-							
-						ax3 = plt.subplot(313)
+							ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
+
 						ax3.errorbar(fitt-time, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
 						ax3.plot(shiftedtimes, fit(shiftedtimes)) 
 						ax1.plot(plottimes, fit(shiftedtimes))
 						plt.ylabel("Log(Luminosity)")
 						plt.xlabel("Log(t-"+ str(int(time))+" MJD)")
+						
 						
 						ax3.set_yscale('log')
 						ax3.set_xscale('log')
