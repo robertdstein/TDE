@@ -13,6 +13,7 @@ from astropy.coordinates import SkyCoord
 from astropy import units as u
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from matplotlib.markers import CARETDOWN
 
 minpoints = 3
 
@@ -102,14 +103,10 @@ class Full_set:
 			title = band
 			
 			folder = "bands/"
+			combifolder="combinedbands/"
 			
-			allt = []
-			ally = []
-			allupt = []
-			allupy = []
-			labels =[]
-			variables = []
-			maxdate = []
+			allresults = []
+			combiresults=[]
 			
 			for name in vars(self.TDEs):
 				tde = getattr(self.TDEs, name)
@@ -118,17 +115,17 @@ class Full_set:
 						i = tde.bandlist.index(band)
 						
 						var = tde.varlist[i]
-						t, y, upt, upy, md = tde.return_photometry_dataset(band, var)
+						res= tde.return_photometry_dataset(band, var)
 						
-						labels.append(tde.name)
-						allt.append(t)
-						ally.append(y)
-						allupt.append(upt)
-						allupy.append(upy)
-						variables.append(var)
-						maxdate.append(md)
+						res["variable"]=var
+						res["label"]=name
+						
+						allresults.append(res)
+						if (var == "magnitude") & (len(res["time"]) > 0):
+							combiresults.append(res)
 				
-			scatter_plot(folder, title, allt, ally, allupt, allupy, labels, variables, maxdate, sharex=True)
+			scatter_plot(folder, title, allresults)
+			scatter_plot(combifolder, title, combiresults, combined=True, tshift=True)
 		
 	def list_best(self):
 		"""Lists the TDE candidates which are most promising.
@@ -264,7 +261,7 @@ class TDE_Candidate:
 	def isbest(self):
 		"""Assesses whether a given candiate is promising.
 		"""
-		self.check_xray()
+#		self.check_xray()
 		if self.has_photometry:
 			if hasattr(self, "mjdmax") and hasattr(self, "mjdvismax"):
 				if self.nbands > 2.0:
@@ -651,20 +648,23 @@ class TDE_Candidate:
 		if hasattr(self.photometry, band+"_"+var):
 			data = getattr(self.photometry,band+"_"+var)
 			
-			time=[]
-			y=[]
-			upt = []
-			upy =[]
+			results = dict()
+			results["time"]=[]
+			results["y"]=[]
+			results["upper_limit_time"] = []
+			results["upper_limit_y"] =[]
+			results["sigma_upper"]=[]
+			results["sigma_lower"]=[]											
 			
 			if hasattr(self, "mjdmax"):
-				md = [self.mjdmax]
+				results["maxdate"] = [self.mjdmax]
 			else:
-				md = [None]
+				results["maxdate"]  = [None]
 				
 			if hasattr(self, "mjdvismax"):
-				md.append(self.mjdvismax)
+				results["maxdate"].append(self.mjdvismax)
 			else:
-				md.append(None)
+				results["maxdate"].append(None)
 			
 			for entry in data:
 				if "time" in entry.keys():
@@ -672,98 +672,135 @@ class TDE_Candidate:
 					if isinstance(t, list):
 						t = t[0]
 					if "upperlimit" in entry.keys():
-						upy.append(float(entry[var]))
-						upt.append(float(t))
+						results["upper_limit_y"].append(float(entry[var]))
+						results["upper_limit_time"].append(float(t))
 					else:
-						y.append(float(entry[var]))
-						time.append(float(t))
-			return time, y, upt, upy, md
+						results["y"].append(float(entry[var]))
+						results["time"].append(float(t))
+						
+						if "e_upper_"+var in entry.keys():
+							sigup = float(entry["e_upper_" + var])
+							sigdown = float(entry["e_lower_" + var])
+						elif "e_"+var in entry.keys():
+							sigup = float(entry["e_" + var])
+							sigdown=sigup
+						else:
+							print "Can't find value for error in " + var
+							sigup = 0.0
+							sigdown = sigup
+						results["sigma_upper"].append(sigup)
+						results["sigma_lower"].append(sigdown)
+						
+			
+			return results
 		else:
-			return None, None, None, None, None
+			return None
 			
 	def plot_candidate(self):
 		if self.has_photometry:
 			folder = "candidates/"
+			opticalfolder="optical/"
 			title = self.name
 			
-			allt = []
-			ally = []
-			allupt = []
-			allupy = []
-			labels =[]
-			variables = []
-			maxdate=[]
+			allresults=[]
+			opticalresults=[]
 			
 			for band in sorted(self.bandlist, key=str.lower):
 				i = self.bandlist.index(band)
 				
 				var = self.varlist[i]
-				t, y, upt, upy, md = self.return_photometry_dataset(band, var)
+				res = self.return_photometry_dataset(band, var)
 				
-				labels.append(band+"_"+var)
-				allt.append(t)
-				ally.append(y)
-				allupt.append(upt)
-				allupy.append(upy)
-				variables.append(var)
-				maxdate.append(md)
+				res["variable"]=var
+				res["label"]=band+"_"+var
+				res["band"]=band
 				
-			scatter_plot(folder, title, allt, ally, allupt, allupy, labels, variables, maxdate, sharex=True)
+				allresults.append(res)
+				if var == "magnitude":
+					opticalresults.append(res)
+				
+			scatter_plot(folder, title, allresults)
+			if len(opticalresults) > 0:
+				scatter_plot(opticalfolder, title, opticalresults, combined=True)
+			
 		else:
 			"No photometry was found for", self.name
 		
-def scatter_plot(folder, title, allt, ally, allupt, allupy,labels, variables, maxdate, sharex=False):
+def scatter_plot(folder, title, allresults, combined=False, tshift=False):
 	"""Produces scatter plots for a given set of data.
 	""" 	
 	fig = plt.figure()
 	plt.suptitle(title)
-	npoints = len(labels)
-	nrows = int(float(npoints)/2.) + (npoints % 2)
+	npoints = len(allresults)
 
+	if npoints > 1:			
+		ncolumns=2
+	else:
+		ncolumns=1
+		
+	if not combined:
+		nrows = int(float(npoints)/2.) + (npoints % 2)
+		fig.set_size_inches(ncolumns*7, nrows*5)
+		fig.subplots_adjust(hspace=.5)
+	else:
+		nrows = 1
+		ax=plt.subplot(1,1,1)
+		plt.gca().invert_yaxis()
+		fig.set_size_inches(15, 10)
+		fig.subplots_adjust(hspace=.5)
+	
 	if npoints > 0:
 		for i in range(0, npoints):
-			t = allt[i]
-			y = ally[i]
-			upt = allupt[i]
-			upy = allupy[i]
+			res=allresults[i]
 			
-			label = labels[i]
-			var = variables[i]
-			
-			md = maxdate[i]
-			
-			ax = plt.subplot(nrows,2, i+1)
-			
-			if md[0] != None:
-				plt.axvline(md[0], label="max date")
-				x_formatter = matplotlib.ticker.ScalarFormatter(useOffset=md[0])
-				ax.xaxis.set_major_formatter(x_formatter)
-			
-			if md[1] != None:
-				plt.axvline(md[1], color = "r", label="max vis date")
-			
-			if len(upt) > 0:
-				arrow = u'$\u2193$'
-				plt.scatter(upt, upy, marker=arrow, s=300, label="upper limits")
-			
-			plt.scatter(t, y, label="measurements", color="orange")
+			if tshift:
+				maxdate = res["maxdate"][1]
+				sourcet = np.array(res["time"])
+				check = sourcet>(maxdate-150)
+				t = sourcet[check] - maxdate
+				y = np.array(res["y"])[check]
+				sigup = np.array(res["sigma_upper"])[check]
+				sigdown=np.array(res["sigma_lower"])[check]
+				plt.xlabel("Time since maximum visual luminosity (days)")
+			else:
+				t = res["time"]
+				y = res["y"]
+				upt=res["upper_limit_time"]
+				upy = res["upper_limit_y"]
+				sigup = res["sigma_upper"]
+				sigdown=res["sigma_lower"]
+				plt.xlabel("Time (MJD)")
 
-			plt.title(label)
-
-			if var == "magnitude":
-				plt.gca().invert_yaxis()
-				
-			elif var == "luminosity":
-				ax.set_yscale('log')
-
+			label = res["label"]
+			var = res["variable"]
 			
+			md = res["maxdate"]
 			
-			plt.xlabel("Time (MJD)")
+			if not combined:
+				ax = plt.subplot(nrows, ncolumns,i+1)
+				plt.title(label)
+				if md[0] != None:
+					plt.axvline(md[0], label="max date", color="orange")
+					x_formatter = matplotlib.ticker.ScalarFormatter(useOffset=md[0])
+					ax.xaxis.set_major_formatter(x_formatter)
+			
+				if md[1] != None:
+					plt.axvline(md[1], color = "purple", label="max vis date")
+				if len(upt) > 0:
+					ax.scatter(upt, upy, marker=CARETDOWN, s=150, label="upper limits")
+				if len(t) > 0:
+					ax.errorbar(t, y, yerr=[sigup, sigdown], label="measurements", color="green", ecolor="red", fmt="o")
+
+				if var == "magnitude":
+					plt.gca().invert_yaxis()
+				else:
+					ax.set_yscale('log')
+			
+			elif len(t) > 0:
+				ax.errorbar(t, y, yerr=[sigup, sigdown], label=label, fmt="o")							
+			
 			plt.ylabel(var)
-			plt.legend()
-		
-		fig.set_size_inches(25, nrows*5)
-		fig.subplots_adjust(hspace=.5)
+			ax.legend()
 		
 		path = "graphs/" + folder + title + ".pdf"
 		
@@ -773,7 +810,6 @@ def scatter_plot(folder, title, allt, ally, allupt, allupy,labels, variables, ma
 		
 	else:
 		print "Not Saved!"
-		print allt, ally, labels, variables
 		
 def histograms_plot(titles, xlabels, values):
 	"""Plots histograms for a given set of variables
