@@ -14,6 +14,9 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.markers import CARETDOWN
+import datetime as d
+import os.path
+import lightcurves as lc
 
 minpoints = 3
 
@@ -71,7 +74,6 @@ class Full_set:
 		
 		self.all_available_bands = list(bn)		
 		print "Dataset fully extracted. Of", self.totalentries, "we have", self.candidates_with_photometry, "with at least four photometric observations in one channel."
-		print "The following channels were covered \n", str(self.all_available_bands)
 		self.list_best()
 		
 	def creationtime(self):
@@ -242,11 +244,118 @@ class TDE_Candidate:
 					setattr(self, key, val)
 			else:
 				self.group_photometry(val)
+		self.swiftdata()
 		self.spectrum()	
 		self.coordinates()
 		self.mjd_time()
 		self.isbest()
 		
+	def swiftdata(self):
+		"""Reads datasets downloaded from SWIFT in the 0.3-10KeV range, 
+		saved in location swiftdata/NAME.qdp .
+		"""		
+		datapath = "swiftdata/" + self.name + ".qdp"
+		if os.path.isfile(datapath):
+			metadata = dict()
+			print "Found file:", datapath, 
+			f = open(datapath)
+			line1 = f.readline().split(" ")
+			
+			#Finds Swift Trigger ID
+			metadata["triggerID"] = int(line1[7][:-1])
+			
+			#Finds swift name, and check that this matches the name of the candidate
+			#This ensures an incorrectly-named file, downoladed from swift, cannot be loaded by the wrong candidate
+			catname=str(self.name)
+			
+			mdname = str(line1[9][:-1])			
+			metadata["name"] = mdname
+			
+			for x in [" ", "-"]:
+				mdname = mdname.replace(x, "")
+				catname= catname.replace(x, "")
+				
+			if mdname.lower() in catname.lower():
+				print "\t Successful name match of", metadata["name"], "and", self.name
+			else:
+				print "\t", line1, metadata
+				print "\n \n"
+				print "WARNING! The name found in this file's metadata,", metadata["name"], ", does not match the name of the candidate,", self.name
+				print "\n \n"
+				print "Continue anyway?"
+				choice = raw_input("[y/n]").lower()
+				if choice =="y":
+					pass
+				else:
+					raise Exception("Mismatch of candidate name (from TDE Catalogue) and metadata name (from Swift)")
+			
+			f.readline()
+
+			#Set trigger time
+			#All times in dataset are given relative to the time of trigger
+			line3 = f.readline().split(" ")
+			metadata["year"] = line3[11]
+			metadata["month"] = line3[12]
+			metadata["day"]= line3[13]
+			metadata["time"] = line3[15]+"000"
+			date = d.datetime.strptime(metadata["year"]+metadata["month"]+ metadata["day"]+metadata["time"], '%Y%b%d%X.%f')		
+			triggertime =Time(date)
+			metadata["triggertime"] = triggertime
+			
+			#Records the energy range
+			line4 = f.readline().split(" ")
+			metadata["e_range"]=line4[4]
+			metadata["e_units"]=line4[5]
+			
+			for i in range (4):
+				f.readline()
+				
+			line9  = f.readline().split("\t")
+			f.readline()
+			entries=[]
+			i=0
+			j=0
+			for unsplit in f.readlines():
+				entry=dict()
+				row = unsplit.split("\t")
+				if len(row) > 6:
+					for k in range(len(line9)):
+						var=line9[k]
+						val=row[k]
+						entry[var.replace(" ", "")]=float(val)
+					
+					tst = datetime.timedelta(seconds=float(entry["!Time"]))
+					entry["tst"]=tst				
+					isot =date+tst
+					entry["isotime"] = isot
+					astrotime = Time(isot)				
+					entry["time"] = astrotime.mjd
+					entry["u_time"] = "MJD"
+					entry["telescope"]= "Swift"
+					entry["instrument"]="XRT"
+					entry["countrate"]=entry["Rate"]
+					entry["mode"]="PC"
+					entry["energy"] = metadata["e_range"].split("-")
+					entry["u_energy"] = metadata["e_units"]
+					if float(entry["Ratepos"]) == 0.:
+						entry["upperlimit"]=True
+						j+=1
+					else:
+						entry["e_upper_countrate"] = entry["Ratepos"]
+						entry["e_lower_countrate"] = np.abs(entry["Rateneg"])
+						i +=1
+					entries.append(entry)
+			self.swiftmetadata = metadata
+			
+			band = "X-Ray ("+ line4[4] +") " + str(entry["u_energy"].replace("\n",""))
+			variable="countrate"
+			
+			self.bandlist.append(band)
+			self.varlist.append(variable)
+			self.nbands += 1
+			setattr(self.photometry, band+"_"+variable, entries)
+			
+	
 	def coordinates(self):
 		"""Converts the coordinates given in the json files to floats.
 		"""
@@ -261,7 +370,7 @@ class TDE_Candidate:
 	def isbest(self):
 		"""Assesses whether a given candiate is promising.
 		"""
-#		self.check_xray()
+		self.check_xray()
 		if self.has_photometry:
 			if hasattr(self, "mjdmax") and hasattr(self, "mjdvismax"):
 				if self.nbands > 2.0:
@@ -341,264 +450,352 @@ class TDE_Candidate:
 			if len(getattr(self.photometry, band)) > minpoints:
 				self.has_photometry = True
 				
+	def fit_data_directly(self, var, band):
+		fitdata = self.dataset_to_fit(band, var)						
+		if "t" in fitdata.keys():			
+			if len(fitdata["t"]) > 2:
+				self.plot_llh_minimisation_complex(fitdata)
+				
+	def plot_llh_minimisation_complex(self, fitdata):		
+		fig = plt.figure()	
+		ax1 = plt.subplot(312)
+		
+		if hasattr(self, "mjdmax"):
+			plt.axvline(self.mjdmax, color="k", label="max date")
+			
+		if hasattr(self, "mjdmax"):
+			plt.axvline(self.mjdvismax, color = "green", label="max vis date")
+			
+		plt.suptitle(self.name)
+		ax1.set_yscale('log')
+		
+		fitt = np.array(fitdata["t"])
+		fity = np.array(fitdata["y"])
+		fitup = np.array(fitdata["up"])
+		fitdown=np.array(fitdata["up"])
+		fitsig = np.array(zip(fitup, fitdown))
+		
+		maxtime=float(int(fitdata["maxtime"]))
+		maxlum=fitdata["maxlum"]
+		
+		ax1.errorbar(fitt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
+		plt.xlabel("t")
+		plt.ylabel("Log(" +  fitdata["var"]+")")
+		plt.legend()
+		
+		params=[]
+		covars = []
+		vals = []			
+		
+		offset = np.linspace(-50, 150, num=200)
+		acceptedoffset=[]
+		
+		for i in offset:
+			starttime = maxtime - i
+			
+			newt = fitt-starttime
+				
+			def llh(p):
+				ll=0.0
+				for k in range(len(newt)):
+					time = newt[k]
+					y = fity[k]
+					model = lc.fitfunc(time, p)
+					if y > model:
+						err=fitsig[k][0]
+					else:
+						err=fitsig[k][1]
+					ll += ((y - model)/err)**2
+				return ll
+	
+			pinit = [maxlum, 10**-3, 10, -5./3.]
+			bnds = [(0.0, None), (0.001, 0.1), (1., 250), (-2,-0.01) ]
+			out = optimize.minimize(llh, pinit, bounds=bnds, tol=10**-10)		
+			
+			pfinal = out.x
+			covar = out.hess_inv
+			covars.append(covar)
+			params.append(pfinal)
+			vals.append(np.sum(out.fun))
+			acceptedoffset.append(i)
+		
+		ax2 = plt.subplot(311)
+		
+		best = min(vals)
+		index = vals.index(best)
+		time = maxtime - (acceptedoffset[index])
+		
+		bestparams = params[index]
+		covar = covars[index]
+		
+		print bestparams
+
+		lower=acceptedoffset[0]
+		upper=acceptedoffset[-1]
+		mid=False
+			
+		lowerindex=index
+		upperindex=index
+		lower=best
+		upper = best
+		
+		while (lower < best+0.5) and (lowerindex >0):
+			lowerindex-=1
+			lower = vals[lowerindex]
+		
+		while (upper < best+0.5) and (upperindex +1 <len(vals)):
+			upperindex += 1
+			upper = vals[upperindex]
+		
+#		for j in range(len(vals)):
+#			v = vals[j]
+#			if not mid:
+#				if v > (0.5+best):
+#					lower = acceptedoffset[j]
+#				else:
+#					mid = True
+#			elif v > (0.5+best):
+#				upper = acceptedoffset[j]
+#				break	
+						
+		plt.plot(offset, np.array(vals)-best)
+		plt.xlabel("Log(Age of TDE at observed maximum brightness)")
+		plt.ylabel(r"$\Delta$ Log Likelihood (Gaussian)")
+#		ax2.set_xscale("log")
+		
+		plt.axvspan(acceptedoffset[lowerindex], acceptedoffset[upperindex], color="r", alpha=0.3)
+		plt.scatter(acceptedoffset[index], 0.0, color="r", marker="*")
+		plt.axhline(0.5, color="g")
+
+		plottimes = np.linspace(fitt[0]-100, fitt[-1], 200)
+		shiftedtimes = plottimes-time
+				
+		def fit(t):
+			models=[]
+			for k in range(len(t)):
+				time = t[k]
+				models.append(lc.fitfunc(time, bestparams))
+			return models
+		
+		plt.title("Minimum occurs at " + str(int(time)) + " MJD (" + str(int(acceptedoffset[index]))+" days before date of observed maximum, with 1 " r"$\sigma$ range of " + str(int(acceptedoffset[lowerindex])) + " to "+ str(int(acceptedoffset[upperindex])) + " days before maximum")						
+		ax3 = plt.subplot(313)
+		
+#		if type(covar) != type(None):							
+#			ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " +/- " + str(math.sqrt(np.abs(covar[1][1]))), xy=(0.05, 0.1), xycoords="axes fraction")
+#			ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " +/- " + str(math.sqrt(np.abs(covar[0][0]))), xy=(0.05, 0.1), xycoords="axes fraction")
+		if True:
+			ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
+			ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
+		
+		newt = fitt-time
+
+		ax3.errorbar(newt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
+		ax3.plot(shiftedtimes, fit(shiftedtimes)) 
+		ax1.plot(plottimes, fit(shiftedtimes))
+		plt.ylabel("Log(Luminosity)")
+		ax1.set_ylim(bottom=maxlum*10**-3)
+		ax3.set_ylim(bottom=maxlum*10**-3)
+		plt.xlabel("Log(t-"+ str(int(time))+" MJD)")
+		
+		
+		ax3.set_yscale('log')
+		ax3.set_xscale('log')
+			
+		fig.set_size_inches(15, 20)						
+		
+		path = "graphs/xrays/" + self.name+ ".pdf"						
+		
+		plt.savefig(path)
+		plt.close()
+		print "Saving to", path
+		
+#	def plot_llh_minimisation(self, fitdata):		
+#		fig = plt.figure()	
+#		ax1 = plt.subplot(312)
+#		
+#		if hasattr(self, "mjdmax"):
+#			plt.axvline(self.mjdmax, color="k", label="max date")
+#			
+#		if hasattr(self, "mjdmax"):
+#			plt.axvline(self.mjdvismax, color = "green", label="max vis date")
+#			
+#		plt.suptitle(self.name)
+#		ax1.set_yscale('log')
+#		
+#		fitt = np.array(fitdata["t"])
+#		fity = np.array(fitdata["y"])
+#		fitup = np.array(fitdata["up"])
+#		fitdown=np.array(fitdata["down"])
+#		fitsig = np.array(zip(fitup, fitdown))
+#		
+#		maxtime=float(int(fitdata["maxtime"]))
+#		maxlum=fitdata["maxlum"]
+#		
+#		ax1.errorbar(fitt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
+#		plt.xlabel("t")
+#		plt.ylabel("Log(" +  fitdata["var"]+")")
+#		plt.legend()
+#		
+#		params=[]
+#		covars = []
+#		vals = []			
+#		
+#		offset = np.linspace(-150, 300, num=100)
+#		acceptedoffset=[]
+#		
+#		for i in offset:
+#			starttime = maxtime - (i + 1e-5)
+#			
+#			newt = fitt-starttime
+#			check = newt>(0.0)
+#			if len(newt[check]) > 2:
+#			
+#				def indices(y,model):
+#					if y > model:
+#						return 0
+#					else:
+#						return 1
+#						
+#				vfunc = vectorize(indices)
+#				
+#				def fitfunc(p, x):
+#					return (p[0]*(x**p[1]))
+#					
+#				def llh(p, x, y, err2):
+#					model = fitfunc(p, x)
+#					err_indices = vfunc(y, model)
+#					err = []
+#					for j in range(len(err_indices)):
+#						err.append(err2[j][err_indices[j]])
+#					err= np.array(err)
+#					llh = ((y - model)/err)**2
+#					return llh
+#	
+#				pinit = [max(fity[check]), -1.0]
+#				out = optimize.leastsq(llh, pinit,
+#				                       args=(newt[check], fity[check], fitsig[check]), full_output=1)
+#				
+#				pfinal = out[0]
+#				covar = out[1]
+#				covars.append(covar)
+#				params.append(pfinal)
+#				vals.append(np.sum(llh(pfinal, newt[check], fity[check],fitsig[check])))
+#				acceptedoffset.append(i)
+#		
+#		ax2 = plt.subplot(311)
+#		
+#		best = min(vals)
+#		index = vals.index(best)
+#		time = maxtime - (acceptedoffset[index])
+#
+#		lower=acceptedoffset[0]
+#		upper=acceptedoffset[-1]
+#		mid=False
+#		
+#		for j in range(len(vals)):
+#			v = vals[j]
+#			if not mid:
+#				if v > (0.5+best):
+#					lower = acceptedoffset[j]
+#				else:
+#					mid = True
+#			elif v > (0.5+best):
+#				upper = acceptedoffset[j]
+#				break
+#						
+#		plt.plot(acceptedoffset, np.array(vals)-best)
+#		plt.xlabel("Log(Age of TDE at observed maximum brightness)")
+#		plt.ylabel(r"$\Delta$ Log Likelihood (Gaussian)")
+##		ax2.set_xscale("log")
+#		
+#		plt.axvspan(lower, upper, color="r", alpha=0.3)
+#		plt.scatter(acceptedoffset[index], 0.0, color="r", marker="*")
+#		plt.axhline(0.5, color="g")
+#
+#		bestparams = params[index]
+#		covar = covars[index]
+#
+#		plottimes = np.linspace(fitt[0], fitt[-1], 200)
+#		shiftedtimes = plottimes-time
+#		
+#		def fit(x):
+#			return bestparams[0] * (x**bestparams[1])
+#		
+#		plt.title("Minimum occurs at " + str(int(time)) + " MJD (" + str(int(acceptedoffset[index]))+" days before date of observed maximum, with 1 " r"$\sigma$ range of " + str(int(lower)) + " to "+ str(int(upper)) + " days before maximum")						
+#		ax3 = plt.subplot(313)
+#		
+#		if type(covar) != type(None):							
+#			ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " +/- " + str(math.sqrt(np.abs(covar[1][1]))), xy=(0.05, 0.1), xycoords="axes fraction")
+#			ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " +/- " + str(math.sqrt(np.abs(covar[0][0]))), xy=(0.05, 0.1), xycoords="axes fraction")
+#		else:
+#			ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
+#			ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
+#		
+#		newt = fitt-time
+#		check = newt>(0.0)
+#
+#		ax3.errorbar(newt[check], fity[check], yerr=[fitup[check], fitdown[check]], label="measurements", color="b", ecolor="r", fmt='o')
+#		ax3.plot(shiftedtimes, fit(shiftedtimes)) 
+#		ax1.plot(plottimes, fit(shiftedtimes))
+#		plt.ylabel("Log(Luminosity)")
+#		plt.xlabel("Log(t-"+ str(int(time))+" MJD)")
+#		
+#		
+#		ax3.set_yscale('log')
+#		ax3.set_xscale('log')
+#			
+#		fig.set_size_inches(15, 20)						
+#		
+#		path = "graphs/xrays/" + self.name+ ".pdf"						
+#		
+#		plt.savefig(path)
+#		plt.close()
+#		print "Saving to", path
+				
 	def check_xray(self):
 		"""Checks to see if there is a light curve visible in X Ray measurements.
 		Fits this distribution to see if it is close to the charecteristic t^-5/3.
 		"""
 		xrband = "X-Ray (0.3-2.0) keV"
+		var = "luminosity"
 		if hasattr(self, "bandlist"):
 			if xrband in self.bandlist:
-				data = getattr(self.photometry, xrband+"_"+"luminosity")					
+				self.fit_data_directly(var, xrband)
 				
-				time=[]
-				y=[]
-				sigma=[]
-				upt = []
-				upy =[]
-				upsig=[]
-				lowersig = []
+	def dataset_to_fit(self, band, var):
+		"""Checks to see if there is a light curve visible in swift X Ray measurements.
+		Fits this distribution to see if it is close to the charecteristic t^-5/3.
+		"""
+		fitdata = dict()
+		fitdata["var"]=var
+		fitdata["band"]=band
+
+		if hasattr(self, "bandlist"):
+			if band in self.bandlist:
 				
-				for entry in data:
-					if "time" in entry.keys():
-						t = entry["time"]
-						if isinstance(t, list):
-							t = t[0]
-						if "upperlimit" in entry.keys():
-							upy.append(float(entry["luminosity"]))
-							upt.append(float(t))
-						else:
-							lum = float(entry["luminosity"])
-							y.append(lum)
-							time.append(float(t))
-							meansigma = 0.5*(float(entry["e_upper_luminosity"]) + float(entry["e_lower_luminosity"]))
-							if meansigma==0.0:
-								sigma.append(0.5*lum)
-								upsig.append(0.5*lum)
-								lowersig.append(0.5*lum)
-							else:
-								sigma.append(meansigma)
-								upsig.append(float(entry["e_upper_luminosity"]))
-								lowersig.append(float(entry["e_lower_luminosity"]))
-					
-				if len(y) > 0:
-					maxlum = float(max(y))
-					maxtime = time[y.index(maxlum)]
-					
-					print self.name, maxlum, y, maxtime, time
-					
-					allt = time+upt
-					
-					lastt=0.0			
-					
-					for j in range(len(allt)):
-						t = allt[j]
-						if lastt < t < maxtime:
-							lastt=t
-							
-					preceding = []
-					for i in range(len(upt)):
-						t = upt[i]
-						if float(t) < (maxtime-50):
-							preceding.append(float(upy[i]))
-							
-#					print preceding, "Max lum:", maxlum
-					
-					if len(preceding) > 0:
-						rmax = float(maxlum)/float(max(preceding))					
-						rmean = float(maxlum)/float(np.mean(preceding))
-						rmin= float(maxlum)/float(min(preceding))
-						
-						if  rmax> 1.5:
-							if rmean > 4:
-								if rmin > 20:
-									self.ratiotest=True
-								
-#						print self.name, rmax, rmean, rmin, self.ratiotest
-#					else:
-#						print self.name, "has insufficient data"
-					
-#					if self.ratiotest:
-#						print self.name, "has passed the ratio test!"
-#					else:
-#						print self.name, "has FAILED the ratio test!"
-						
-					fitt=[]
-					fity=[]
-					fitsig=[]
-					fitup=[]
-					fitdown=[]
-					for i in range(len(time)):
-						t = time[i]
-						if float(t) >= maxtime:
-							fitt.append(float(t))
-							fity.append(float(y[i]))
-							fitsig.append(sigma[i])
-							fitup.append(upsig[i])
-							fitdown.append(lowersig[i])
-							
-							
-					if len(fitt) > 2:
-						
-						fig = plt.figure()	
-						ax1 = plt.subplot(312)
-						
-						if hasattr(self, "mjdmax"):
-							plt.axvline(self.mjdmax, color="k", label="max date")
-							
-						if hasattr(self, "mjdmax"):
-							plt.axvline(self.mjdvismax, color = "green", label="max vis date")
-							
-						plt.suptitle(self.name)
-						ax1.set_yscale('log')
-						
-						fitt = np.array(fitt)
-						fity = np.array(fity)
-						fitup = np.array(fitup)
-						fitdown=np.array(fitdown)
-						fitsig = np.array(zip(fitup, fitdown))
-						
-#						fitsig=np.array(fitsig)
-						
-#						print fity, fitt, fitup, fitdown
-#						raw_input("prompt")
-						
-						ax1.errorbar(fitt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
-						plt.xlabel("t")
-						plt.ylabel("Log(Luminosity)")
-						plt.legend()
-						
-						params=[]
-						covars = []
-						vals = []
-						
-						scale = np.log10(maxtime  - lastt)			
-						
-						offset = np.logspace(0, scale, num=100)
-#						offset = np.array(range())
-#						print "Range", offset
-						
-						for i in offset:
-							starttime = maxtime - (i + 1e-5)
-#							if hasattr(self, "mjdmax"):
-#								starttime = self.mjdmax
-							
-							newt = fitt-starttime
-							
-							def indices(y,model):
-								if y > model:
-									return 0
-								else:
-									return 1
+				results = self.return_photometry_dataset(band, var)
 									
-							vfunc = vectorize(indices)
-							
-							
-							def fitfunc(p, x):
-								return (p[0]*(x**p[1]))
-								
-							def llh(p, x, y, err2):
-								model = fitfunc(p, x)
-								err_indices = vfunc(y, model)
-								err = []
-								for j in range(len(err_indices)):
-									err.append(err2[j][err_indices[j]])
-								err= np.array(err)
-								llh = ((y - model)/err)**2
-								return llh
-								
-#							def llh(p, x, y, err):
-#								model = fitfunc(p, x)
-#								llh = ((y - model)/err)**2
-#								return llh
-
-							pinit = [maxlum, -1.0]
-							out = optimize.leastsq(llh, pinit,
-							                       args=(newt, fity, fitsig), full_output=1)
-							
-							pfinal = out[0]
-							covar = out[1]
-							covars.append(covar)
-							params.append(pfinal)
-
-							vals.append(np.sum(llh(pfinal, newt, fity,fitsig)))
-						
-#						print vals
-						
-						ax2 = plt.subplot(311)
-						
-						
-						
-						best = min(vals)
-						index = vals.index(best)
-						time = maxtime - (offset[index] + 1e-5)
-
-						lower=1.
-						upper=(maxtime-lastt)
-						mid=False
-						
-						for j in range(len(vals)):
-							v = vals[j]
-							if not mid:
-								if v > (0.5+best):
-									lower = offset[j]
-								else:
-									mid = True
+				if len(results["y"]) > 0:
+					fitdata["maxlum"] = float(max(results["y"]))
+					fitdata["maxtime"] = results["time"][results["y"].index(fitdata["maxlum"])]
+					
+					fitdata["t"]=[]
+					fitdata["y"]=[]
+					fitdata["up"]=[]
+					fitdata["down"]=[]
+					for i in range(len(results["time"])):
+						t = results["time"][i]
+						if float(t) >= fitdata["maxtime"]:
+							fitdata["t"].append(float(t))
+							fitdata["y"].append(float(results["y"][i]))
+							if results["sigma_upper"][i] > 0:
+								fitdata["up"].append(results["sigma_upper"][i])
+								fitdata["down"].append(results["sigma_lower"][i])
 							else:
-								if v > (0.5+best):
-									upper = offset[j]
-									break
-								
-						print "Done!", lower, upper, offset[index], (lower+upper)/2, (upper-lower)
-						
-						plt.plot(offset, np.array(vals)-best)
-						plt.xlabel("Log(Age of TDE at observed maximum brightness)")
-						plt.ylabel(r"$\Delta$ Log Likelihood (Gaussian)")
-						ax2.set_xscale("log")
-						
-						plt.axvspan(lower, upper, color="r", alpha=0.3)
-						plt.scatter(offset[index], 0.0, color="r", marker="*")
-						plt.axhline(0.5, color="g")
-
-						bestparams = params[index]
-						covar = covars[index]
-						
-#						print best, pfinal, offset[index]
-#						raw_input("prompt")
-
-						plottimes = np.linspace(fitt[0], fitt[-1], 200)
-						shiftedtimes = plottimes-time
-						
-						def fit(x):
-							return bestparams[0] * (x**bestparams[1])
-						
-						plt.title("Minimum occurs at " + str(int(time)) + " MJD (" + str(int(offset[index]))+" days before date of observed maximum, with 1 " r"$\sigma$ range of " + str(int(lower)) + " to "+ str(int(upper)) + " days before maximum")						
-						ax3 = plt.subplot(313)
-						
-						if type(covar) != type(None):							
-							ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " +/- " + str(math.sqrt(np.abs(covar[1][1]))), xy=(0.05, 0.1), xycoords="axes fraction")
-							ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " +/- " + str(math.sqrt(np.abs(covar[0][0]))), xy=(0.05, 0.1), xycoords="axes fraction")
-						else:
-							ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
-							ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
-
-						ax3.errorbar(fitt-time, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
-						ax3.plot(shiftedtimes, fit(shiftedtimes)) 
-						ax1.plot(plottimes, fit(shiftedtimes))
-						plt.ylabel("Log(Luminosity)")
-						plt.xlabel("Log(t-"+ str(int(time))+" MJD)")
-						
-						
-						ax3.set_yscale('log')
-						ax3.set_xscale('log')
-							
-						fig.set_size_inches(15, 20)						
-						
-						path = "graphs/xrays/" + self.name+ ".pdf"						
-						
-						plt.savefig(path)
-						plt.close()
-						print "Saving to", path
-
+								fitdata["up"].append(float(results["y"][i])*0.2)
+								fitdata["down"].append(float(results["y"][i])*0.2)
+			
+		return fitdata
 				
 	def spectrum(self):
 		"""Checks to see if the candidate has spectral data.
@@ -746,7 +943,7 @@ def scatter_plot(folder, title, allresults, combined=False, tshift=False):
 		nrows = 1
 		ax=plt.subplot(1,1,1)
 		plt.gca().invert_yaxis()
-		fig.set_size_inches(15, 10)
+		fig.set_size_inches(10, 7)
 		fig.subplots_adjust(hspace=.5)
 	
 	if npoints > 0:
