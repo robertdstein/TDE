@@ -10,11 +10,11 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-#[Maxlum, a, transitiontime, c]
-pinit = [10**43, 10**-3, 100, -5./3.]
+#[Maxlum, a, transitiontime, c, f]
+pinit = [10**43, 10**-3, 100, -5./3., 10**-8, 0.0]
 
 def peak(x, p=pinit):
-	model = p[0]*(np.exp(-p[1]*x**2))
+	model = p[0]*(np.exp(-p[1]*(x)**2))
 	return np.maximum(model, 1.0)
 	
 def continuity(p=pinit):
@@ -37,12 +37,13 @@ def powerlaw(x, p=pinit):
 	return b*((x-x0)**power)
 	
 				
-def fitfunc(x, p=pinit):
+def fitfunc(x_unshifted, p=pinit):
+	x = x_unshifted+p[5]
 	xtr, ytr, gradtr = continuity(p)
 	if x < xtr:
-		return peak(x, p)
+		return peak(x, p) + p[4]*p[0]
 	else:
-		return powerlaw(x, p)
+		return powerlaw(x, p) + p[4]*p[0]
 		
 def plot():
 	xvals = np.arange(-100, 500, step=0.1)
@@ -51,13 +52,15 @@ def plot():
 	plt.suptitle("Gaussian with smooth transition to power law")
 	
 	A0vals = [10**43, 10**44]
-	avals = [10**-1, 10**-3, 10**-5]
+	avals = [10**-2, 10**-3, 10**-4]
 	ttvals = [10., 50., 100.]
 	cvals = [-0.1, -0.9, -5./3., -4.]
+	fvals = [0.0, 10**-5, 10**-3]
+	offset = [-100, 0.0, 100, 200]
 	
-	labels = ["A0", "a", "tt", "c"]
-	paramvals = [A0vals, avals, ttvals,cvals]
-	titles = ["Amplitude of peak", "Width of Peak", "Transition Time", "Power Law Index"]
+	labels = ["A0", "a", "tt", "c", "f", "offset"]
+	paramvals = [A0vals, avals, ttvals,cvals, fvals, offset]
+	titles = ["Amplitude of peak", "Width of Peak", "Transition Time", "Power Law Index", "Underlying Luminosity as fraction of maximum", "Time displacement of peak from maximum luminosity"]
 	
 	nplots = len(paramvals)
 	
@@ -86,3 +89,5 @@ def plot():
 	fig.set_size_inches(15, 30)						
 	plt.savefig("graphs/lightcurve_models.pdf")
 	plt.close()
+	
+plot()

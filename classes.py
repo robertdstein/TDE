@@ -458,13 +458,13 @@ class TDE_Candidate:
 				
 	def plot_llh_minimisation_complex(self, fitdata):		
 		fig = plt.figure()	
-		ax1 = plt.subplot(312)
+		ax1 = plt.subplot(111)
 		
-		if hasattr(self, "mjdmax"):
-			plt.axvline(self.mjdmax, color="k", label="max date")
-			
-		if hasattr(self, "mjdmax"):
-			plt.axvline(self.mjdvismax, color = "green", label="max vis date")
+#		if hasattr(self, "mjdmax"):
+#			plt.axvline(self.mjdmax, color="k", label="max date")
+#			
+#		if hasattr(self, "mjdmax"):
+#			plt.axvline(self.mjdvismax, color = "green", label="max vis date")
 			
 		plt.suptitle(self.name)
 		ax1.set_yscale('log')
@@ -472,31 +472,40 @@ class TDE_Candidate:
 		fitt = np.array(fitdata["t"])
 		fity = np.array(fitdata["y"])
 		fitup = np.array(fitdata["up"])
-		fitdown=np.array(fitdata["up"])
+		fitdown=np.array(fitdata["down"])
+		fit_ul_t=np.array(fitdata["ul_t"])
+		fit_ul_y=np.array(fitdata["ul_y"])
 		fitsig = np.array(zip(fitup, fitdown))
 		
 		maxtime=float(int(fitdata["maxtime"]))
 		maxlum=fitdata["maxlum"]
 		
 		ax1.errorbar(fitt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
+		
 		plt.xlabel("t")
 		plt.ylabel("Log(" +  fitdata["var"]+")")
-		plt.legend()
 		
 		params=[]
 		covars = []
 		vals = []			
 		
-		offset = np.linspace(-50, 150, num=200)
-		acceptedoffset=[]
+		offset = np.linspace(-100.0, 100., num=3)
+		acceptedoffset = []
 		
 		for i in offset:
-			starttime = maxtime - i
+			pbest = [maxlum, 10**-3, 10, -2., 0.0, 0.0]
 			
-			newt = fitt-starttime
+			avals = [10**-2, 10**-3, 10**-4]
+			ttvals = [10., 50., 100.]
+			cvals = [-0.1, -1.0, -4.]
+			fvals = [0.0, 10**-5]
+
+			newt = fitt -maxtime +i
+			new_ul_t = fit_ul_t - maxtime + i
 				
 			def llh(p):
 				ll=0.0
+
 				for k in range(len(newt)):
 					time = newt[k]
 					y = fity[k]
@@ -506,100 +515,147 @@ class TDE_Candidate:
 					else:
 						err=fitsig[k][1]
 					ll += ((y - model)/err)**2
+				
+				for k in range(len(new_ul_t)):
+					time = new_ul_t[k]
+					y = fit_ul_y[k]
+					model = lc.fitfunc(time, p)
+					if y < model:
+						ll += -np.log(0.05)
+					
 				return ll
 	
-			pinit = [maxlum, 10**-3, 10, -5./3.]
-			bnds = [(0.0, None), (0.001, 0.1), (1., 250), (-2,-0.01) ]
-			out = optimize.minimize(llh, pinit, bounds=bnds, tol=10**-10)		
+
+			bnds = [(maxlum, None), (10**-6, 10**-2), (1., 100), (-10.,-0.01), (0.0, 0.1), (-200, 300)]
+			bestout = optimize.minimize(llh, pbest, bounds=bnds, tol=10**-11)		
 			
-			pfinal = out.x
-			covar = out.hess_inv
+			llbest = np.sum(bestout.fun)
+				
+			print "\n", "Minimising for", i
+			print "N = ", len(avals)*len(ttvals)*len(cvals)*len(fvals)
+			print "\n"		
+			
+			for a in avals:
+				for tt in ttvals:
+					for c in cvals:
+						for f in fvals:
+							pinit = [maxlum, a, tt, c, f, i]
+							out = optimize.minimize(llh, pinit, bounds=bnds, tol=10**-11)
+							ll = np.sum(out.fun)
+							if ll < llbest:
+								llbest= ll
+								bestout=out
+								pbest=pinit
+			
+			print "\n Best ll", np.sum(bestout.fun)
+			print  bestout.x			
+			
+			pfinal = bestout.x
+			covar = bestout.success					
 			covars.append(covar)
 			params.append(pfinal)
-			vals.append(np.sum(out.fun))
-			acceptedoffset.append(i)
+			vals.append(np.sum(bestout.fun))
+			acceptedoffset.append(pfinal[5])
 		
-		ax2 = plt.subplot(311)
+		
 		
 		best = min(vals)
 		index = vals.index(best)
-		time = maxtime - (acceptedoffset[index])
+
 		
 		bestparams = params[index]
 		covar = covars[index]
+		print covar
 		
 		print bestparams
+		
+		t_max_to_peak=bestparams[5]
+		
+		time = maxtime - t_max_to_peak
 
-		lower=acceptedoffset[0]
-		upper=acceptedoffset[-1]
-		mid=False
-			
-		lowerindex=index
-		upperindex=index
-		lower=best
-		upper = best
+		lower=min(acceptedoffset)
+		upper=max(acceptedoffset)
 		
-		while (lower < best+0.5) and (lowerindex >0):
-			lowerindex-=1
-			lower = vals[lowerindex]
+#		ax11 = plt.subplot(321)	
+#		lowerindex=index
+#		upperindex=index
+#		lower=best
+#		upper = best
+#		
+#		while (lower < best+0.5) and (lowerindex >0):
+#			lowerindex-=1
+#			lower = vals[lowerindex]
+#		
+#		while (upper < best+0.5) and (upperindex +1 <len(vals)):
+#			upperindex += 1
+#			upper = vals[upperindex]
+#						
+#		plt.plot(acceptedoffset, np.array(vals)-best)
+#		plt.xlabel("Age of TDE at observed maximum brightness")
+#		plt.ylabel(r"$\Delta$ Log Likelihood (Gaussian)")
+#		
+#		plt.axvspan(acceptedoffset[lowerindex], acceptedoffset[upperindex], color="r", alpha=0.3)
+#		plt.scatter(acceptedoffset[index], 0.0, color="r", marker="*")
+#		plt.axhline(0.5, color="g")
+#		
+#		plt.title("Minimum occurs at " + str(int(time)) + " MJD (" + str(int(t_max_to_peak))+" days before date of observed maximum, with 1 " r"$\sigma$ range of " + str(int(offset[lowerindex])) + " to "+ str(int(offset[upperindex])) + " days before maximum")						
+#
+#		
+#		ax12=plt.subplot(322)
+#		for k in range(len(offset)):
+#			if k == index:
+#				plt.scatter(offset[k], params[k][5], color="green", marker="*")
+#			else:
+#				plt.scatter(offset[k], params[k][5], color="purple")
 		
-		while (upper < best+0.5) and (upperindex +1 <len(vals)):
-			upperindex += 1
-			upper = vals[upperindex]
+#		ax12 = plt.subplot(311)
+#		
+#		plt.scatter(offset, acceptedoffset,  color="purple")
+#		plt.scatter(offset[index], acceptedoffset[index], color="green", marker ="o")
+#		plt.xlabel("Starting value for minimisation")
+#		plt.ylabel("Final value for minimisation")
 		
-#		for j in range(len(vals)):
-#			v = vals[j]
-#			if not mid:
-#				if v > (0.5+best):
-#					lower = acceptedoffset[j]
-#				else:
-#					mid = True
-#			elif v > (0.5+best):
-#				upper = acceptedoffset[j]
-#				break	
-						
-		plt.plot(offset, np.array(vals)-best)
-		plt.xlabel("Log(Age of TDE at observed maximum brightness)")
-		plt.ylabel(r"$\Delta$ Log Likelihood (Gaussian)")
-#		ax2.set_xscale("log")
-		
-		plt.axvspan(acceptedoffset[lowerindex], acceptedoffset[upperindex], color="r", alpha=0.3)
-		plt.scatter(acceptedoffset[index], 0.0, color="r", marker="*")
-		plt.axhline(0.5, color="g")
-
-		plottimes = np.linspace(fitt[0]-100, fitt[-1], 200)
-		shiftedtimes = plottimes-time
+		plottimes = np.linspace(min([time, fit_ul_t[0], fitt[0]])-50,np.maximum(fitt[-1], fit_ul_t[-1])+100, 5000)
+		shiftedtimes = plottimes-maxtime
 				
 		def fit(t):
 			models=[]
 			for k in range(len(t)):
-				time = t[k]
-				models.append(lc.fitfunc(time, bestparams))
+				models.append(lc.fitfunc(t[k], bestparams))
 			return models
 		
-		plt.title("Minimum occurs at " + str(int(time)) + " MJD (" + str(int(acceptedoffset[index]))+" days before date of observed maximum, with 1 " r"$\sigma$ range of " + str(int(acceptedoffset[lowerindex])) + " to "+ str(int(acceptedoffset[upperindex])) + " days before maximum")						
-		ax3 = plt.subplot(313)
-		
-#		if type(covar) != type(None):							
-#			ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " +/- " + str(math.sqrt(np.abs(covar[1][1]))), xy=(0.05, 0.1), xycoords="axes fraction")
-#			ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " +/- " + str(math.sqrt(np.abs(covar[0][0]))), xy=(0.05, 0.1), xycoords="axes fraction")
 		if True:
-			ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
-			ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
-		
-		newt = fitt-time
+			ax1.annotate(bestparams, xy=(0.05, 0.3), xycoords="axes fraction")
+			
+		newt = fitt-(time +bestparams[2])
+		new_ul_t = fit_ul_t - (time + bestparams[2])
 
-		ax3.errorbar(newt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
-		ax3.plot(shiftedtimes, fit(shiftedtimes)) 
-		ax1.plot(plottimes, fit(shiftedtimes))
+#		ax3.errorbar(newt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
+#		
+#		ax3.plot(shiftedtimes-bestparams[2], fit(shiftedtimes),label="Fit") 
+		ax1.plot(plottimes, fit(shiftedtimes), label="Fit")
+		ax1.axvline(time, label="Peak Time", color="purple", linestyle="--")
+		ax1.axvline(time+bestparams[2], label="Model Transition",color="g", linestyle="--")
 		plt.ylabel("Log(Luminosity)")
-		ax1.set_ylim(bottom=maxlum*10**-3)
-		ax3.set_ylim(bottom=maxlum*10**-3)
-		plt.xlabel("Log(t-"+ str(int(time))+" MJD)")
 		
+		if len(fit_ul_t) > 0:
+			ax1.scatter(fit_ul_t, fit_ul_y, marker=CARETDOWN, s=150, label="upper limits")
+#			ax3.scatter(new_ul_t, fit_ul_y, marker=CARETDOWN, s=150, label="upper limits")
+			
+		lowerlim = np.minimum(min(fity), min(fit_ul_y))*0.1
 		
-		ax3.set_yscale('log')
-		ax3.set_xscale('log')
+		ax1.set_ylim(bottom=lowerlim)
+		ax1.set_xlim(left=fitt[0]-(50+np.abs(t_max_to_peak)))
+		ax1.legend()		
+#		
+#		ax3.set_ylim(bottom=lowerlim)
+#		plt.xlabel("Log(t-"+ str(int(time+bestparams[2]))+" MJD)")
+#		
+#		
+#		ax3.set_yscale('log')
+#		ax3.set_xscale('log')
+		
+		plt.legend()
 			
 		fig.set_size_inches(15, 20)						
 		
@@ -608,150 +664,7 @@ class TDE_Candidate:
 		plt.savefig(path)
 		plt.close()
 		print "Saving to", path
-		
-#	def plot_llh_minimisation(self, fitdata):		
-#		fig = plt.figure()	
-#		ax1 = plt.subplot(312)
-#		
-#		if hasattr(self, "mjdmax"):
-#			plt.axvline(self.mjdmax, color="k", label="max date")
-#			
-#		if hasattr(self, "mjdmax"):
-#			plt.axvline(self.mjdvismax, color = "green", label="max vis date")
-#			
-#		plt.suptitle(self.name)
-#		ax1.set_yscale('log')
-#		
-#		fitt = np.array(fitdata["t"])
-#		fity = np.array(fitdata["y"])
-#		fitup = np.array(fitdata["up"])
-#		fitdown=np.array(fitdata["down"])
-#		fitsig = np.array(zip(fitup, fitdown))
-#		
-#		maxtime=float(int(fitdata["maxtime"]))
-#		maxlum=fitdata["maxlum"]
-#		
-#		ax1.errorbar(fitt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
-#		plt.xlabel("t")
-#		plt.ylabel("Log(" +  fitdata["var"]+")")
-#		plt.legend()
-#		
-#		params=[]
-#		covars = []
-#		vals = []			
-#		
-#		offset = np.linspace(-150, 300, num=100)
-#		acceptedoffset=[]
-#		
-#		for i in offset:
-#			starttime = maxtime - (i + 1e-5)
-#			
-#			newt = fitt-starttime
-#			check = newt>(0.0)
-#			if len(newt[check]) > 2:
-#			
-#				def indices(y,model):
-#					if y > model:
-#						return 0
-#					else:
-#						return 1
-#						
-#				vfunc = vectorize(indices)
-#				
-#				def fitfunc(p, x):
-#					return (p[0]*(x**p[1]))
-#					
-#				def llh(p, x, y, err2):
-#					model = fitfunc(p, x)
-#					err_indices = vfunc(y, model)
-#					err = []
-#					for j in range(len(err_indices)):
-#						err.append(err2[j][err_indices[j]])
-#					err= np.array(err)
-#					llh = ((y - model)/err)**2
-#					return llh
-#	
-#				pinit = [max(fity[check]), -1.0]
-#				out = optimize.leastsq(llh, pinit,
-#				                       args=(newt[check], fity[check], fitsig[check]), full_output=1)
-#				
-#				pfinal = out[0]
-#				covar = out[1]
-#				covars.append(covar)
-#				params.append(pfinal)
-#				vals.append(np.sum(llh(pfinal, newt[check], fity[check],fitsig[check])))
-#				acceptedoffset.append(i)
-#		
-#		ax2 = plt.subplot(311)
-#		
-#		best = min(vals)
-#		index = vals.index(best)
-#		time = maxtime - (acceptedoffset[index])
-#
-#		lower=acceptedoffset[0]
-#		upper=acceptedoffset[-1]
-#		mid=False
-#		
-#		for j in range(len(vals)):
-#			v = vals[j]
-#			if not mid:
-#				if v > (0.5+best):
-#					lower = acceptedoffset[j]
-#				else:
-#					mid = True
-#			elif v > (0.5+best):
-#				upper = acceptedoffset[j]
-#				break
-#						
-#		plt.plot(acceptedoffset, np.array(vals)-best)
-#		plt.xlabel("Log(Age of TDE at observed maximum brightness)")
-#		plt.ylabel(r"$\Delta$ Log Likelihood (Gaussian)")
-##		ax2.set_xscale("log")
-#		
-#		plt.axvspan(lower, upper, color="r", alpha=0.3)
-#		plt.scatter(acceptedoffset[index], 0.0, color="r", marker="*")
-#		plt.axhline(0.5, color="g")
-#
-#		bestparams = params[index]
-#		covar = covars[index]
-#
-#		plottimes = np.linspace(fitt[0], fitt[-1], 200)
-#		shiftedtimes = plottimes-time
-#		
-#		def fit(x):
-#			return bestparams[0] * (x**bestparams[1])
-#		
-#		plt.title("Minimum occurs at " + str(int(time)) + " MJD (" + str(int(acceptedoffset[index]))+" days before date of observed maximum, with 1 " r"$\sigma$ range of " + str(int(lower)) + " to "+ str(int(upper)) + " days before maximum")						
-#		ax3 = plt.subplot(313)
-#		
-#		if type(covar) != type(None):							
-#			ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " +/- " + str(math.sqrt(np.abs(covar[1][1]))), xy=(0.05, 0.1), xycoords="axes fraction")
-#			ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " +/- " + str(math.sqrt(np.abs(covar[0][0]))), xy=(0.05, 0.1), xycoords="axes fraction")
-#		else:
-#			ax1.annotate("Best fit has power law with gradient " + "{0:.3g}".format(bestparams[1]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
-#			ax3.annotate("Best fit maximum luminosity is " "{0:.3g}".format(bestparams[0]) + " but failed to find covariance (fit did not converge correctly)", xy=(0.05, 0.1), xycoords="axes fraction")
-#		
-#		newt = fitt-time
-#		check = newt>(0.0)
-#
-#		ax3.errorbar(newt[check], fity[check], yerr=[fitup[check], fitdown[check]], label="measurements", color="b", ecolor="r", fmt='o')
-#		ax3.plot(shiftedtimes, fit(shiftedtimes)) 
-#		ax1.plot(plottimes, fit(shiftedtimes))
-#		plt.ylabel("Log(Luminosity)")
-#		plt.xlabel("Log(t-"+ str(int(time))+" MJD)")
-#		
-#		
-#		ax3.set_yscale('log')
-#		ax3.set_xscale('log')
-#			
-#		fig.set_size_inches(15, 20)						
-#		
-#		path = "graphs/xrays/" + self.name+ ".pdf"						
-#		
-#		plt.savefig(path)
-#		plt.close()
-#		print "Saving to", path
-				
+
 	def check_xray(self):
 		"""Checks to see if there is a light curve visible in X Ray measurements.
 		Fits this distribution to see if it is close to the charecteristic t^-5/3.
@@ -761,6 +674,14 @@ class TDE_Candidate:
 		if hasattr(self, "bandlist"):
 			if xrband in self.bandlist:
 				self.fit_data_directly(var, xrband)
+				
+	def fit_optical(self):
+		"""Checks to see if there is a light curve visible in X Ray measurements.
+		Fits this distribution to see if it is close to the charecteristic t^-5/3.
+		"""
+		if hasattr(self, "bandlist"):
+			for band in self.bandlist:
+				self.fit_data_directly(var, band)
 				
 	def dataset_to_fit(self, band, var):
 		"""Checks to see if there is a light curve visible in swift X Ray measurements.
@@ -783,17 +704,28 @@ class TDE_Candidate:
 					fitdata["y"]=[]
 					fitdata["up"]=[]
 					fitdata["down"]=[]
+					fitdata["ul_t"]=results["upper_limit_time"]
+					fitdata["ul_y"]=results["upper_limit_y"]
+					
 					for i in range(len(results["time"])):
 						t = results["time"][i]
-						if float(t) >= fitdata["maxtime"]:
-							fitdata["t"].append(float(t))
-							fitdata["y"].append(float(results["y"][i]))
-							if results["sigma_upper"][i] > 0:
-								fitdata["up"].append(results["sigma_upper"][i])
-								fitdata["down"].append(results["sigma_lower"][i])
-							else:
-								fitdata["up"].append(float(results["y"][i])*0.2)
-								fitdata["down"].append(float(results["y"][i])*0.2)
+						fitdata["t"].append(float(t))
+						fitdata["y"].append(float(results["y"][i]))
+						if results["sigma_upper"][i] > 0:
+							fitdata["up"].append(results["sigma_upper"][i])
+							fitdata["down"].append(results["sigma_lower"][i])
+						else:
+							fitdata["up"].append(float(results["y"][i])*0.5)
+							fitdata["down"].append(float(results["y"][i])*0.5)
+								
+					allt = results["time"]+results["upper_limit_time"]
+					
+					fitdata["last_t"]=0.0			
+					
+					for j in range(len(allt)):
+						t = allt[j]
+						if fitdata["last_t"] < t < fitdata["maxtime"]:
+							fitdata["last_t"]=t
 			
 		return fitdata
 				
