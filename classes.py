@@ -17,6 +17,9 @@ from matplotlib.markers import CARETDOWN
 import datetime as d
 import os.path
 import lightcurves as lc
+from tqdm import tqdm
+from sklearn.externals import joblib
+import plotting as p
 
 minpoints = 3
 
@@ -30,7 +33,7 @@ def magtolum(absmag):
 	"""
 	solarlum = 3.826 * 10**33
 	solarabsmag = 4.75
-	exponent = (solarabsmag - float(absmag))/2.5
+	exponent = (solarabsmag - absmag)/2.5
 	lum = solarlum * 10 **(exponent)
 	return lum
 
@@ -52,6 +55,7 @@ class Full_set:
 		The zipfile contains individual json files for each candidate.
 		"""
 		zf = zipfile.ZipFile(self.path, 'r')
+		self.update_time = datetime.datetime.now()
 		self.creation_time=datetime.datetime(*zf.infolist()[0].date_time)
 		
 		filelist = zf.namelist()[2:]
@@ -80,23 +84,29 @@ class Full_set:
 		"""Returns the time that the online catalogue was last updated
 		"""
 		print "Catalogue version created:", self.creation_time, "\n"
+		print "Dataset last expanded or updated on:", self.update_time, "\n"
 		
 	def info_candidate(self, name):
 		"""Plots all available light curves for a given candidate.
 		"""
-		if hasattr(self.TDEs, name):
-			tde = getattr(self.TDEs, name) 
-			print "TDE found, with photometry =", tde.has_photometry
-			tde.plot_candidate()
-		else:
-			raise Exception("No TDE with this name was found!")
+		while not hasattr(self.TDEs, name):
+			print "No TDE with this name was found!"
+			print "Availablie candidates are:"
+			print self.TDEs.__dict__.keys()
+			print "\n"
+			name=raw_input("Please reenter candidate name: \t")
+		tde = getattr(self.TDEs, name) 
+		tde.plot_candidate(fit=True)
+		self.update_time = datetime.datetime.now()
 				
-	def plot_all_candidates(self):
+	def plot_all_candidates(self, fit=False):
 		"""Plots all available light curves for each candidate.
 		"""
 		for name in vars(self.TDEs):
 			tde = getattr(self.TDEs, name)
-			tde.plot_candidate()
+			tde.plot_candidate(fit)
+			if fit:
+				self.update_time = datetime.datetime.now()
 			
 	def plot_all_bands(self):
 		"""Plots all available light curves for each band.
@@ -126,8 +136,8 @@ class Full_set:
 						if (var == "magnitude") & (len(res["time"]) > 0):
 							combiresults.append(res)
 				
-			scatter_plot(folder, title, allresults)
-			scatter_plot(combifolder, title, combiresults, combined=True, tshift=True)
+			p.scatter_plot(folder, title, allresults)
+			p.scatter_plot(combifolder, title, combiresults, combined=True, tshift=True)
 		
 	def list_best(self):
 		"""Lists the TDE candidates which are most promising.
@@ -147,7 +157,15 @@ class Full_set:
 		print "Those passing the ratio test are: \n"
 		print ratio
 		
-	
+	def list_fits(self):
+		print "The following candidates have been fitted: \n"
+		for name in vars(self.TDEs):
+			tde = getattr(self.TDEs, name)
+			if len(tde.fits) > 0:
+				print tde.name, ":"
+				for d in tde.fits:
+					print "\t", d,"\t", list(tde.fits[d])
+		
 	def plot_distibutions(self):
 		""" Plots binned distributions of candidates for each variable in 'variables'.
 		"""
@@ -172,8 +190,46 @@ class Full_set:
 						values[i].append(float(val))
 		
 		print "Plotting histograms for the following:", titles
-		histograms_plot(titles, xlabels, values)
+		p.histograms_plot(titles, xlabels, values)
 		
+	def plot_fit_parameters(self, names=None, bands=None, savepath="graphs/optical_fits/combined/all.pdf"):
+		""" Plots binned distributions of candidates for each variable in 'variables'.
+		"""
+		full = []
+		
+		for i in range(len(lc.return_parameter_bounds())):
+			full.append([])
+			
+		if names == None:
+			names = vars(self.TDEs)
+			
+		for name in names:
+			tde = getattr(self.TDEs, name)
+			if len(tde.fits) > 0:
+				path = "graphs/optical_fits/" + tde.name+ "/"
+				if not os.path.exists(path):
+					os.mkdir(path)
+				filename = path+"histogram.pdf"
+				data = tde.fit_parameter_histogram(filename, bands)
+				for j in range(len(data)):
+					full[j].extend(data[j])
+					
+		titles, xlabels = lc.return_parameter_names()
+		print "\n"
+		print "Parameters \t Max \t \t Min \n"
+		
+		for i, param in enumerate(xlabels):
+			print param, "\t \t", "{0:.3}".format(min(full[i])), "\t \t","{0:.3}".format(max(full[i]))
+		
+		print "\n"
+		p.histograms_plot(titles, xlabels, full, savepath)
+		
+	def plot_fit_parameters_with_peaks(self):
+		names = ["PS1-11af", "PS1-10jh", "PTF09ge"]
+		bands = ["r", "g", "i"]
+		savepath="graphs/optical_fits/combined/with_peak.pdf"
+		self.plot_fit_parameters(names, bands, savepath)
+				
 	def plot_spectra(self):
 		"""Plots the spectrum for each candidate  which has one
 		"""
@@ -233,6 +289,7 @@ class TDE_Candidate:
 		self.ratiotest = False
 		self.has_xray = False
 		self.best=False
+		self.fits=dict()
 		for key, val in jsonfile[0].items():
 			if key != "photometry":
 				if isinstance(val, list):
@@ -244,7 +301,7 @@ class TDE_Candidate:
 					setattr(self, key, val)
 			else:
 				self.group_photometry(val)
-		self.swiftdata()
+#		self.swiftdata()
 		self.spectrum()	
 		self.coordinates()
 		self.mjd_time()
@@ -370,7 +427,7 @@ class TDE_Candidate:
 	def isbest(self):
 		"""Assesses whether a given candiate is promising.
 		"""
-		self.check_xray()
+#		self.fit_xray()
 		if self.has_photometry:
 			if hasattr(self, "mjdmax") and hasattr(self, "mjdvismax"):
 				if self.nbands > 2.0:
@@ -450,222 +507,155 @@ class TDE_Candidate:
 			if len(getattr(self.photometry, band)) > minpoints:
 				self.has_photometry = True
 				
-	def fit_data_directly(self, var, band):
+	def fit_data_directly(self, var, band, ax):
 		fitdata = self.dataset_to_fit(band, var)						
 		if "t" in fitdata.keys():			
 			if len(fitdata["t"]) > 2:
-				self.plot_llh_minimisation_complex(fitdata)
+				self.plot_llh_minimisation(fitdata, ax)
 				
-	def plot_llh_minimisation_complex(self, fitdata):		
-		fig = plt.figure()	
-		ax1 = plt.subplot(111)
-		
-#		if hasattr(self, "mjdmax"):
-#			plt.axvline(self.mjdmax, color="k", label="max date")
-#			
-#		if hasattr(self, "mjdmax"):
-#			plt.axvline(self.mjdvismax, color = "green", label="max vis date")
-			
-		plt.suptitle(self.name)
-		ax1.set_yscale('log')
-		
+	def plot_llh_minimisation(self, fitdata, ax):
 		fitt = np.array(fitdata["t"])
 		fity = np.array(fitdata["y"])
-		fitup = np.array(fitdata["up"])
-		fitdown=np.array(fitdata["down"])
+		
+		uncertaintyfrac = 0.1
+		
+		fitup = np.array(fitdata["up"])+uncertaintyfrac
+		fitdown=np.array(fitdata["down"])+uncertaintyfrac
 		fit_ul_t=np.array(fitdata["ul_t"])
+		
 		fit_ul_y=np.array(fitdata["ul_y"])
+
+		if fitdata["var"] == "magnitude":
+			fity = -fity
+			plt.ylabel(fitdata["var"])
+			maxlum = max(fity)
+			maxtime = self.mjdvismax
+			ax.axvline(maxtime, label="Peak Visual Magnitude",color="r", linestyle="--")
+		else:
+			plt.ylabel("Log(" +  fitdata["var"]+")")
+			maxlum = max(fity)
+			mask = fity == maxlum
+			maxtime = fitt[mask]
+			
 		fitsig = np.array(zip(fitup, fitdown))
 		
-		maxtime=float(int(fitdata["maxtime"]))
-		maxlum=fitdata["maxlum"]
-		
-		ax1.errorbar(fitt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
+		ax.errorbar(fitt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
 		
 		plt.xlabel("t")
-		plt.ylabel("Log(" +  fitdata["var"]+")")
 		
 		params=[]
 		covars = []
-		vals = []			
+		vals = []
+#		
+		offset = np.linspace(-30.0, 120., num=6)
+		A0vals = [maxlum]
+		avals = [10**-3]
+		ttvals = [10., 100.]
+		cvals = [-0.2, -1.0, -2.0, -4.0]
+		fvals = [0.0]
+		N = len(avals)*len(ttvals)*len(cvals)*len(fvals)*len(offset)*len(A0vals)
 		
-		offset = np.linspace(-100.0, 100., num=3)
-		acceptedoffset = []
-		
-		for i in offset:
-			pbest = [maxlum, 10**-3, 10, -2., 0.0, 0.0]
-			
-			avals = [10**-2, 10**-3, 10**-4]
-			ttvals = [10., 50., 100.]
-			cvals = [-0.1, -1.0, -4.]
-			fvals = [0.0, 10**-5]
-
-			newt = fitt -maxtime +i
-			new_ul_t = fit_ul_t - maxtime + i
-				
-			def llh(p):
-				ll=0.0
-
-				for k in range(len(newt)):
-					time = newt[k]
-					y = fity[k]
-					model = lc.fitfunc(time, p)
-					if y > model:
-						err=fitsig[k][0]
-					else:
-						err=fitsig[k][1]
-					ll += ((y - model)/err)**2
-				
-				for k in range(len(new_ul_t)):
-					time = new_ul_t[k]
-					y = fit_ul_y[k]
-					model = lc.fitfunc(time, p)
-					if y < model:
-						ll += -np.log(0.05)
-					
-				return ll
+		def llh(p, to_print=False):
+			ll=0.0
 	
-
-			bnds = [(maxlum, None), (10**-6, 10**-2), (1., 100), (-10.,-0.01), (0.0, 0.1), (-200, 300)]
-			bestout = optimize.minimize(llh, pbest, bounds=bnds, tol=10**-11)		
-			
-			llbest = np.sum(bestout.fun)
+			for k, t in enumerate(fitt):
+				time = t - maxtime + p[5]
+				y = fity[k]
+				model = lc.fitfunc(time, p)
+				if y > model:
+					err=fitsig[k][0]
+				else:
+					err=fitsig[k][1]
+				ll += ((y - model)/err)**2
+				if to_print:
+					print time, y, model, err, ((y - model)/err)**2, ll
+						
+			for k, ul_t in enumerate((fit_ul_t)):
+				time = ul_t - maxtime + p[5]
+				y = fit_ul_y[k]
+				model = lc.fitfunc(time, p)
+				if y < model:
+					ll += -np.log(0.05)				
+			return ll
+		
+		with tqdm(total=N) as pbar:
+			for i in offset:
+				pbest = lc.default(maxlum)
 				
-			print "\n", "Minimising for", i
-			print "N = ", len(avals)*len(ttvals)*len(cvals)*len(fvals)
-			print "\n"		
-			
-			for a in avals:
-				for tt in ttvals:
-					for c in cvals:
-						for f in fvals:
-							pinit = [maxlum, a, tt, c, f, i]
-							out = optimize.minimize(llh, pinit, bounds=bnds, tol=10**-11)
-							ll = np.sum(out.fun)
-							if ll < llbest:
-								llbest= ll
-								bestout=out
-								pbest=pinit
-			
-			print "\n Best ll", np.sum(bestout.fun)
-			print  bestout.x			
-			
-			pfinal = bestout.x
-			covar = bestout.success					
-			covars.append(covar)
-			params.append(pfinal)
-			vals.append(np.sum(bestout.fun))
-			acceptedoffset.append(pfinal[5])
-		
-		
+				fittedpeaktime = maxtime-i
+	
+				bnds = lc.return_parameter_bounds(maxlum)
+				bestout = optimize.minimize(llh, pbest, bounds=bnds)		
+				
+				llbest = np.sum(bestout.fun)
+				
+				for A0 in A0vals:
+					for a in avals:
+						for tt in ttvals:
+							for c in cvals:
+								for f in fvals:
+									pinit = [A0, a, tt, c, f, i]
+									bnds = lc.return_parameter_bounds(A0)
+									out = optimize.minimize(llh, pinit, method='L-BFGS-B', bounds=bnds)
+									ll = np.sum(out.fun)
+									pbar.update(1)
+									if ll < llbest:
+										llbest= ll
+										bestout=out
+										pbest=pinit
+				
+				pfinal = bestout.x
+				covar = bestout.success					
+				covars.append(covar)
+				params.append(pfinal)
+				vals.append(bestout.fun)
+				
+				best = min(vals)
+				index = vals.index(best)
+				bestparams = params[index]
 		
 		best = min(vals)
 		index = vals.index(best)
 
-		
 		bestparams = params[index]
-		covar = covars[index]
-		print covar
 		
-		print bestparams
+		self.fits[fitdata["band"]] = bestparams
+		covar = covars[index]
 		
 		t_max_to_peak=bestparams[5]
 		
-		time = maxtime - t_max_to_peak
-
-		lower=min(acceptedoffset)
-		upper=max(acceptedoffset)
+		fittedpeaktime = maxtime-t_max_to_peak
 		
-#		ax11 = plt.subplot(321)	
-#		lowerindex=index
-#		upperindex=index
-#		lower=best
-#		upper = best
-#		
-#		while (lower < best+0.5) and (lowerindex >0):
-#			lowerindex-=1
-#			lower = vals[lowerindex]
-#		
-#		while (upper < best+0.5) and (upperindex +1 <len(vals)):
-#			upperindex += 1
-#			upper = vals[upperindex]
-#						
-#		plt.plot(acceptedoffset, np.array(vals)-best)
-#		plt.xlabel("Age of TDE at observed maximum brightness")
-#		plt.ylabel(r"$\Delta$ Log Likelihood (Gaussian)")
-#		
-#		plt.axvspan(acceptedoffset[lowerindex], acceptedoffset[upperindex], color="r", alpha=0.3)
-#		plt.scatter(acceptedoffset[index], 0.0, color="r", marker="*")
-#		plt.axhline(0.5, color="g")
-#		
-#		plt.title("Minimum occurs at " + str(int(time)) + " MJD (" + str(int(t_max_to_peak))+" days before date of observed maximum, with 1 " r"$\sigma$ range of " + str(int(offset[lowerindex])) + " to "+ str(int(offset[upperindex])) + " days before maximum")						
-#
-#		
-#		ax12=plt.subplot(322)
-#		for k in range(len(offset)):
-#			if k == index:
-#				plt.scatter(offset[k], params[k][5], color="green", marker="*")
-#			else:
-#				plt.scatter(offset[k], params[k][5], color="purple")
-		
-#		ax12 = plt.subplot(311)
-#		
-#		plt.scatter(offset, acceptedoffset,  color="purple")
-#		plt.scatter(offset[index], acceptedoffset[index], color="green", marker ="o")
-#		plt.xlabel("Starting value for minimisation")
-#		plt.ylabel("Final value for minimisation")
-		
-		plottimes = np.linspace(min([time, fit_ul_t[0], fitt[0]])-50,np.maximum(fitt[-1], fit_ul_t[-1])+100, 5000)
-		shiftedtimes = plottimes-maxtime
+		plottimes = np.linspace(fitt[0]-100, fitt[-1]+100, 5000)		
+		shiftedtimes = plottimes-fittedpeaktime
 				
-		def fit(t):
+		def fit(times):
 			models=[]
-			for k in range(len(t)):
-				models.append(lc.fitfunc(t[k], bestparams))
+			for t in times:
+				models.append(lc.fitfunc(t, bestparams))
 			return models
 		
-		if True:
-			ax1.annotate(bestparams, xy=(0.05, 0.3), xycoords="axes fraction")
-			
-		newt = fitt-(time +bestparams[2])
-		new_ul_t = fit_ul_t - (time + bestparams[2])
+		ax.annotate(str(bestparams) +" " + str(best), xy=(0.05, 0.1), xycoords="axes fraction")
 
-#		ax3.errorbar(newt, fity, yerr=[fitup, fitdown], label="measurements", color="b", ecolor="r", fmt='o')
-#		
-#		ax3.plot(shiftedtimes-bestparams[2], fit(shiftedtimes),label="Fit") 
-		ax1.plot(plottimes, fit(shiftedtimes), label="Fit")
-		ax1.axvline(time, label="Peak Time", color="purple", linestyle="--")
-		ax1.axvline(time+bestparams[2], label="Model Transition",color="g", linestyle="--")
-		plt.ylabel("Log(Luminosity)")
+		ax.plot(plottimes, fit(shiftedtimes), label="Fit")
+		
+		ax.axvline(fittedpeaktime -t_max_to_peak + bestparams[2], label="Model Transition",color="purple", linestyle="--")
+		
+		plt.ylabel("Magnitude")
 		
 		if len(fit_ul_t) > 0:
-			ax1.scatter(fit_ul_t, fit_ul_y, marker=CARETDOWN, s=150, label="upper limits")
-#			ax3.scatter(new_ul_t, fit_ul_y, marker=CARETDOWN, s=150, label="upper limits")
+			ax.scatter(fit_ul_t, -fit_ul_y, marker=CARETDOWN, s=150, label="Upper Limits")
 			
-		lowerlim = np.minimum(min(fity), min(fit_ul_y))*0.1
-		
-		ax1.set_ylim(bottom=lowerlim)
-		ax1.set_xlim(left=fitt[0]-(50+np.abs(t_max_to_peak)))
-		ax1.legend()		
+		lowerlim = min(fity)-1
+		upperlim = max(fity) + 1
 #		
-#		ax3.set_ylim(bottom=lowerlim)
-#		plt.xlabel("Log(t-"+ str(int(time+bestparams[2]))+" MJD)")
-#		
-#		
-#		ax3.set_yscale('log')
-#		ax3.set_xscale('log')
+		ax.set_ylim(bottom=lowerlim, top=upperlim)
+		ax.set_xlim(fitt[0]-(100+np.abs(t_max_to_peak)))
+		ax.legend()		
 		
 		plt.legend()
-			
-		fig.set_size_inches(15, 20)						
-		
-		path = "graphs/xrays/" + self.name+ ".pdf"						
-		
-		plt.savefig(path)
-		plt.close()
-		print "Saving to", path
 
-	def check_xray(self):
+	def fit_xray(self):
 		"""Checks to see if there is a light curve visible in X Ray measurements.
 		Fits this distribution to see if it is close to the charecteristic t^-5/3.
 		"""
@@ -673,15 +663,82 @@ class TDE_Candidate:
 		var = "luminosity"
 		if hasattr(self, "bandlist"):
 			if xrband in self.bandlist:
-				self.fit_data_directly(var, xrband)
+				fitdata = self.dataset_to_fit(xrband, var)						
+				if "t" in fitdata.keys():			
+					if len(fitdata["t"]) > 2:
+						fig = plt.figure()	
+						ax = plt.subplot(111)
+						plt.suptitle(self.name)
+						self.plot_llh_minimisation(fitdata, ax)
+				
+						fig.set_size_inches(10, 7)						
+				
+						path = "graphs/xrays/" + self.name+ ".pdf"
+						plt.savefig(path)
+						plt.close()
+						print "Saving to", path
 				
 	def fit_optical(self):
 		"""Checks to see if there is a light curve visible in X Ray measurements.
 		Fits this distribution to see if it is close to the charecteristic t^-5/3.
 		"""
+		var="magnitude"
+		path = "graphs/optical_fits/" + self.name+ "/"
 		if hasattr(self, "bandlist"):
 			for band in self.bandlist:
-				self.fit_data_directly(var, band)
+				if hasattr(self.photometry, band+"_"+var):
+					fitdata = self.dataset_to_fit(band, var)						
+					if "t" in fitdata.keys():			
+						if len(fitdata["t"]) > 2:
+							fig = plt.figure()	
+							ax = plt.subplot(111)
+							plt.suptitle(self.name)
+							
+							print "Minimising for candidate", self.name, "in band", band							
+							
+							self.plot_llh_minimisation(fitdata, ax)
+					
+							fig.set_size_inches(10, 7)						
+
+							if not os.path.exists(path):
+								os.mkdir(path)
+							file_name = path + band + ".pdf"
+							plt.savefig(file_name)
+							plt.close()
+							print "Saving to", file_name
+
+		filename = path + "histogram.pdf"
+		if len(self.fits) > 0:
+			self.fit_parameter_histogram(filename)				
+							
+	def fit_parameter_histogram(self, path, bands=None):
+		"""Produces histograms to show the distribution of fit parameters
+		"""
+		data = self.fits
+		ndata = len(data[data.keys()[0]])
+		
+		if bands == None:
+			bands = data.keys()
+		
+		lists=[]
+		
+		titles, xlabels = lc.return_parameter_names()
+		
+		if len(xlabels) != ndata:
+			raise Exception("Number of parameters does not match number of labels!")
+		
+		for i in range(ndata):
+			lists.append([])
+			
+		for band in bands:
+			if band in data.keys():
+				entry = data[band]
+				for i in range(len(entry)):
+					lists[i].append(entry[i])			
+		
+		if len(lists[0]) > 0:
+			p.histograms_plot(titles, xlabels, lists, path, bnds=True)
+		return lists
 				
 	def dataset_to_fit(self, band, var):
 		"""Checks to see if there is a light curve visible in swift X Ray measurements.
@@ -696,10 +753,7 @@ class TDE_Candidate:
 				
 				results = self.return_photometry_dataset(band, var)
 									
-				if len(results["y"]) > 0:
-					fitdata["maxlum"] = float(max(results["y"]))
-					fitdata["maxtime"] = results["time"][results["y"].index(fitdata["maxlum"])]
-					
+				if len(results["y"]) > 0:					
 					fitdata["t"]=[]
 					fitdata["y"]=[]
 					fitdata["up"]=[]
@@ -718,15 +772,15 @@ class TDE_Candidate:
 							fitdata["up"].append(float(results["y"][i])*0.5)
 							fitdata["down"].append(float(results["y"][i])*0.5)
 								
-					allt = results["time"]+results["upper_limit_time"]
+#					allt = results["time"]+results["upper_limit_time"]
 					
-					fitdata["last_t"]=0.0			
-					
-					for j in range(len(allt)):
-						t = allt[j]
-						if fitdata["last_t"] < t < fitdata["maxtime"]:
-							fitdata["last_t"]=t
-			
+#					fitdata["last_t"]=0.0			
+#					
+#					for j in range(len(allt)):
+#						t = allt[j]
+#						if fitdata["last_t"] < t < fitdata["maxtime"]:
+#							fitdata["last_t"]=t
+		
 		return fitdata
 				
 	def spectrum(self):
@@ -825,8 +879,10 @@ class TDE_Candidate:
 		else:
 			return None
 			
-	def plot_candidate(self):
-		if self.has_photometry:
+	def plot_candidate(self, fit=False):
+		if fit:
+			self.fit_optical()
+		elif self.has_photometry:
 			folder = "candidates/"
 			opticalfolder="optical/"
 			title = self.name
@@ -848,121 +904,12 @@ class TDE_Candidate:
 				if var == "magnitude":
 					opticalresults.append(res)
 				
-			scatter_plot(folder, title, allresults)
+			p.scatter_plot(folder, title, allresults)
 			if len(opticalresults) > 0:
-				scatter_plot(opticalfolder, title, opticalresults, combined=True)
-			
+				p.scatter_plot(opticalfolder, title, opticalresults, combined=True)
 		else:
 			"No photometry was found for", self.name
-		
-def scatter_plot(folder, title, allresults, combined=False, tshift=False):
-	"""Produces scatter plots for a given set of data.
-	""" 	
-	fig = plt.figure()
-	plt.suptitle(title)
-	npoints = len(allresults)
-
-	if npoints > 1:			
-		ncolumns=2
-	else:
-		ncolumns=1
-		
-	if not combined:
-		nrows = int(float(npoints)/2.) + (npoints % 2)
-		fig.set_size_inches(ncolumns*7, nrows*5)
-		fig.subplots_adjust(hspace=.5)
-	else:
-		nrows = 1
-		ax=plt.subplot(1,1,1)
-		plt.gca().invert_yaxis()
-		fig.set_size_inches(10, 7)
-		fig.subplots_adjust(hspace=.5)
-	
-	if npoints > 0:
-		for i in range(0, npoints):
-			res=allresults[i]
-			
-			if tshift:
-				maxdate = res["maxdate"][1]
-				sourcet = np.array(res["time"])
-				check = sourcet>(maxdate-150)
-				t = sourcet[check] - maxdate
-				y = np.array(res["y"])[check]
-				sigup = np.array(res["sigma_upper"])[check]
-				sigdown=np.array(res["sigma_lower"])[check]
-				plt.xlabel("Time since maximum visual luminosity (days)")
-			else:
-				t = res["time"]
-				y = res["y"]
-				upt=res["upper_limit_time"]
-				upy = res["upper_limit_y"]
-				sigup = res["sigma_upper"]
-				sigdown=res["sigma_lower"]
-				plt.xlabel("Time (MJD)")
-
-			label = res["label"]
-			var = res["variable"]
-			
-			md = res["maxdate"]
-			
-			if not combined:
-				ax = plt.subplot(nrows, ncolumns,i+1)
-				plt.title(label)
-				if md[0] != None:
-					plt.axvline(md[0], label="max date", color="orange")
-					x_formatter = matplotlib.ticker.ScalarFormatter(useOffset=md[0])
-					ax.xaxis.set_major_formatter(x_formatter)
-			
-				if md[1] != None:
-					plt.axvline(md[1], color = "purple", label="max vis date")
-				if len(upt) > 0:
-					ax.scatter(upt, upy, marker=CARETDOWN, s=150, label="upper limits")
-				if len(t) > 0:
-					ax.errorbar(t, y, yerr=[sigup, sigdown], label="measurements", color="green", ecolor="red", fmt="o")
-
-				if var == "magnitude":
-					plt.gca().invert_yaxis()
-				else:
-					ax.set_yscale('log')
-			
-			elif len(t) > 0:
-				ax.errorbar(t, y, yerr=[sigup, sigdown], label=label, fmt="o")							
-			
-			plt.ylabel(var)
-			ax.legend()
-		
-		path = "graphs/" + folder + title + ".pdf"
-		
-		plt.savefig(path)
-		plt.close()
-		print "Saving to", path
-		
-	else:
-		print "Not Saved!"
-		
-def histograms_plot(titles, xlabels, values):
-	"""Plots histograms for a given set of variables
-	"""
-	fig = plt.figure()
-	npoints = len(titles)
-	nrows = int(float(npoints)/2.) + (npoints % 2)
-
-	if npoints > 0:
-		for i in range(0, npoints):
-			ax = plt.subplot(nrows,2, i+1)
-			n, bins, _ = plt.hist(values[i], bins=20, label=xlabels[i])
-	
-			plt.title(titles[i])
-			plt.xlabel(xlabels[i])
-			
-	fig.set_size_inches(25, nrows*5)
-	fig.subplots_adjust(hspace=.5)
-	
-	path = "graphs/histogram.pdf"
-	plt.savefig(path)
-	print "Saving to", path
-	plt.close()
-				
+						
 def get_degrees(time_str):
 	"""Converts a HH:MM:SS time string to a float (number of hours).
 	"""
