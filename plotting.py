@@ -11,8 +11,70 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.markers import CARETDOWN
 import lightcurves as lc
+import readsupernova as rs
 
-def scatter_plot(folder, title, allresults, combined=False, tshift=False):
+def scatter_distibution(folder, title, allresults):
+	"""Plots scatter distributions
+	"""
+	fig = plt.figure()
+	plt.suptitle(title)
+	npoints = len(allresults)
+
+	if npoints > 1:			
+		ncolumns=2
+	else:
+		ncolumns=1
+
+	nrows = int(float(npoints)/2.) + (npoints % 2)
+	fig.set_size_inches(ncolumns*7, nrows*5)
+	fig.subplots_adjust(hspace=.5)
+	
+	if npoints > 0:
+		for i in range(0, npoints):
+			res = allresults[i]
+			
+			ax = plt.subplot(nrows, ncolumns,i+1)
+			
+			plt.xlabel(res["x_label"])
+			plt.ylabel(res["y_label"])
+			
+			bnds = []
+			
+			for i, var in enumerate([res["xvar"], res["yvar"]]):
+				val = var.split(".")[-1]
+				labels = lc.return_histogram_labels()
+				if (val in labels) and (val != "A0"):
+					index = labels.index(val)
+					bounds = lc.return_parameter_bounds()[index]
+					
+					if i==0:
+						ax.set_xlim(bounds)
+					else:
+						ax.set_ylim(bounds)
+			
+			if "z" in res.keys():
+				cm = plt.cm.get_cmap('RdYlGn_r')
+				if res["zvar"].split(".")[-1] == "chi2_per_dof":
+					ul = 2.0
+				else:
+					ul=None
+				
+				scattergraph = plt.scatter(res["x"], res["y"],c=res["z"], vmax=ul, cmap=cm)
+				cbar = plt.colorbar(scattergraph)
+				cbar.set_label(res["z_label"])
+				
+			else:
+				ax.scatter(res["x"], res["y"])
+			ax.legend()
+		
+		path = "graphs/" + folder + title + ".pdf"
+		
+		plt.savefig(path)
+		plt.close()
+		print "Saving to", path
+	
+
+def scatter_photometry(folder, title, allresults, combined=False, tshift=False, sn=False):
 	"""Produces scatter plots for a given set of data.
 	""" 	
 	fig = plt.figure()
@@ -26,7 +88,7 @@ def scatter_plot(folder, title, allresults, combined=False, tshift=False):
 		
 	if not combined:
 		nrows = int(float(npoints)/2.) + (npoints % 2)
-		fig.set_size_inches(ncolumns*7, nrows*5)
+		fig.set_size_inches(ncolumns*5, nrows*3)
 		fig.subplots_adjust(hspace=.5)
 	else:
 		nrows = 1
@@ -83,11 +145,30 @@ def scatter_plot(folder, title, allresults, combined=False, tshift=False):
 					ax.set_yscale('log')
 			
 			elif len(t) > 0:
-				ax.errorbar(t, y, yerr=[sigup, sigdown], label=label, fmt="o")							
+				ax.errorbar(t, y, yerr=[sigup, sigdown], label=label, fmt="o")
+#				print sn_data
 			
 			plt.ylabel(var)
 			ax.legend()
-		
+			
+		if sn and (len(title)==1):
+			sn_data = 	rs.run()
+			lims = ax.get_ylim()
+			for data in sn_data:
+				if title in data.keys():
+					ydata=data[title]
+					ymax = max(ydata)
+					ymin = min(ydata)
+					
+					diff = ymin - lims[1] + 3.0
+					plt.plot(data["t"], ydata - diff, linestyle="--", marker="",label = data["name"])
+
+					print lims, ymax, ymin, diff
+					
+			plt.gca().set_ylim(bottom=lims[0])
+			ax.legend()
+				
+
 		path = "graphs/" + folder + title + ".pdf"
 		
 		plt.savefig(path)
@@ -130,11 +211,11 @@ def histograms_plot(titles, xlabels, values, path=None, bnds=False):
 			plt.title(titles[i])
 			plt.xlabel(xlabels[i])
 			
-	fig.set_size_inches(25, nrows*5)
+	fig.set_size_inches(15, nrows*3)
 	fig.subplots_adjust(hspace=.5)
 	
 	if path == None:	
-		path = "graphs/histogram.pdf"
+		path = "graphs/misc/histogram.pdf"
 		
 	else:
 		split = path.split("/")

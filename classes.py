@@ -14,14 +14,15 @@ from astropy import units as u
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from matplotlib.markers import CARETDOWN
-import datetime as d
 import os.path
 import lightcurves as lc
 from tqdm import tqdm
 from sklearn.externals import joblib
 import plotting as p
+import readswift
+import selected_candidates as sc
 
-minpoints = 3
+minpoints = len(lc.return_histogram_labels())
 
 def wrapAround180(ra_deg):
     ra = np.deg2rad(ra_deg)
@@ -77,7 +78,7 @@ class Full_set:
 						bn.add(bandname)			
 		
 		self.all_available_bands = list(bn)		
-		print "Dataset fully extracted. Of", self.totalentries, "we have", self.candidates_with_photometry, "with at least four photometric observations in one channel."
+		print "Dataset fully extracted. Of", self.totalentries, "we have", self.candidates_with_photometry, "with at least", minpoints, "four photometric observations in one channel."
 		self.list_best()
 		
 	def creationtime(self):
@@ -136,8 +137,8 @@ class Full_set:
 						if (var == "magnitude") & (len(res["time"]) > 0):
 							combiresults.append(res)
 				
-			p.scatter_plot(folder, title, allresults)
-			p.scatter_plot(combifolder, title, combiresults, combined=True, tshift=True)
+			p.scatter_photometry(folder, title, allresults)
+			p.scatter_photometry(combifolder, title, combiresults, combined=True, tshift=True, sn=True)
 		
 	def list_best(self):
 		"""Lists the TDE candidates which are most promising.
@@ -191,14 +192,116 @@ class Full_set:
 		
 		print "Plotting histograms for the following:", titles
 		p.histograms_plot(titles, xlabels, values)
+	
+	def scatter_data_2D(self, title, variables, variablenames, pairIDs, names=None, bands=None):
+		"""Plots scatter distibutions of different variables
+		"""
+		folder = "misc/"
+
+		allvals=[]
 		
+		if names == None:
+			names = vars(self.TDEs)
+		
+		for pair in pairIDs:
+			print pair
+			res=dict()
+			
+			letters = ["x", "y", "z"]
+			allvars=[]
+			
+			for i, ID in enumerate(pair):
+				letter = letters[i]
+				res[letter+"var"]= variables[ID]
+				res[letter+"_label"] = variablenames[ID]
+				allvars.append(variables[ID])
+				print i, letter, variables[ID], variablenames[ID]
+			
+			res["vars"] = allvars
+
+			allvals.append(res)
+		
+		for res in allvals:
+			x=[]
+			y=[]
+			z=[]
+			for name in names:
+				tde = getattr(self.TDEs, name)
+				if tde.has_photometry:
+					vals=[]
+					for var in res["vars"]:
+						path = var.split(".")
+						val = tde
+						while len(path) > 0:
+							if (path[0] == "*") & (isinstance(val, dict)):
+								data = []
+								for key in val.keys():
+									d=val[key]
+									if (bands != None) and (key not in bands):
+										pass
+									else:
+										if isinstance(d, list):
+											data.extend(d[path[1]])
+										else:
+											data.append(d[path[1]])
+								val = data
+								break
+							
+							try:
+								val = val[path[0]]
+							except AttributeError:
+								if hasattr(val, path[0]):
+									val = getattr(val, path[0])
+#								elif path[0] == "*":
+#									print "Right!"
+								else:
+									break
+							except KeyError:
+								break
+									
+							if isinstance(val, unicode):
+								val = float(val)
+								
+							path = path[1:]
+			
+						if  isinstance(val, float) or isinstance(val, list):
+							vals.append(val)
+					
+					if len(vals) == len(res["vars"]):
+						for k, v in enumerate(vals):
+							if isinstance(v, list):
+								[x,y,z][k].extend(v)
+							elif isinstance(v, float):
+								[x,y,z][k].append(v)
+			res["x"] = x
+			res["y"] = y
+			if len(z) > 0:
+				res["z"] = z
+						
+		p.scatter_distibution(folder, title, allvals)
+		
+	def plot_2d_distributions(self):
+		title = "2D_distributions"
+		variables = ["redshift.value", "maxabsmag.value", "ebv.value", "nbands", "hostoffsetdist.value"]
+		variablenames = ["Redshift", "Max Absolute Magnitude", "EBV", "Number of observational bands", "Host Offset Distance"]
+		pairIDs=[[0,1], [0,2], [0,3], [0,4]]
+		self.scatter_data_2D(title, variables, variablenames, pairIDs)
+	
+	def plot_2d_fit_distributions(self, names=None, bands=None, title="2D_fit_distributions"):
+		variables = ["fits.*.chi2_per_dof", "fits.*.tt",  "fits.*.A0", "fits.*.a","fits.*.offset", "fits.*.c"]
+		variablenames = [r"$\chi^{2}$ per degree of freedom", "Transition Times", r"$A_{0}$ in $A_{0} \exp^{-a x^{2}}$", r"a in $A_{0} \exp^{-a x^{2}}$", "Displacement from peak to Brightest Observation Date", r"$\gamma$"]
+		pairIDs=[[1,2, 0], [1,3, 0], [4,2,0], [5, 2, 0], [5, 1, 0], [5,3,0]]
+		self.scatter_data_2D(title, variables, variablenames, pairIDs, names, bands)
+		
+	def plot_2d_fit_with_peaks(self):
+		names, bands = sc.return_candidates_with_peaks()
+		title = "2D_fit_distribution_with_peaks"
+		self.plot_2d_fit_distributions(names, bands, title)
+						
 	def plot_fit_parameters(self, names=None, bands=None, savepath="graphs/optical_fits/combined/all.pdf"):
 		""" Plots binned distributions of candidates for each variable in 'variables'.
 		"""
 		full = []
-		
-		for i in range(len(lc.return_parameter_bounds())):
-			full.append([])
 			
 		if names == None:
 			names = vars(self.TDEs)
@@ -212,9 +315,11 @@ class Full_set:
 				filename = path+"histogram.pdf"
 				data = tde.fit_parameter_histogram(filename, bands)
 				for j in range(len(data)):
+					if len(full) <len(data):
+						full.append([])
 					full[j].extend(data[j])
 					
-		titles, xlabels = lc.return_parameter_names()
+		titles, xlabels = lc.return_all_parameter_names()
 		print "\n"
 		print "Parameters \t Max \t \t Min \n"
 		
@@ -225,8 +330,7 @@ class Full_set:
 		p.histograms_plot(titles, xlabels, full, savepath)
 		
 	def plot_fit_parameters_with_peaks(self):
-		names = ["PS1-11af", "PS1-10jh", "PTF09ge"]
-		bands = ["r", "g", "i"]
+		names, bands = sc.return_candidates_with_peaks()
 		savepath="graphs/optical_fits/combined/with_peak.pdf"
 		self.plot_fit_parameters(names, bands, savepath)
 				
@@ -268,7 +372,7 @@ class Full_set:
 		cbar.set_label('Redshift(z)')
 		plt.show()
 		
-		path = "graphs/skymap.pdf"
+		path = "graphs/misc/skymap.pdf"
 		print "Saving to", path
 		plt.savefig(path)
 		plt.close()
@@ -313,100 +417,14 @@ class TDE_Candidate:
 		"""		
 		datapath = "swiftdata/" + self.name + ".qdp"
 		if os.path.isfile(datapath):
-			metadata = dict()
-			print "Found file:", datapath, 
-			f = open(datapath)
-			line1 = f.readline().split(" ")
 			
-			#Finds Swift Trigger ID
-			metadata["triggerID"] = int(line1[7][:-1])
+			print "Found file:", datapath,
 			
-			#Finds swift name, and check that this matches the name of the candidate
-			#This ensures an incorrectly-named file, downoladed from swift, cannot be loaded by the wrong candidate
-			catname=str(self.name)
+			band, metadata, entries = readswift.run(self.name)
 			
-			mdname = str(line1[9][:-1])			
-			metadata["name"] = mdname
-			
-			for x in [" ", "-"]:
-				mdname = mdname.replace(x, "")
-				catname= catname.replace(x, "")
-				
-			if mdname.lower() in catname.lower():
-				print "\t Successful name match of", metadata["name"], "and", self.name
-			else:
-				print "\t", line1, metadata
-				print "\n \n"
-				print "WARNING! The name found in this file's metadata,", metadata["name"], ", does not match the name of the candidate,", self.name
-				print "\n \n"
-				print "Continue anyway?"
-				choice = raw_input("[y/n]").lower()
-				if choice =="y":
-					pass
-				else:
-					raise Exception("Mismatch of candidate name (from TDE Catalogue) and metadata name (from Swift)")
-			
-			f.readline()
-
-			#Set trigger time
-			#All times in dataset are given relative to the time of trigger
-			line3 = f.readline().split(" ")
-			metadata["year"] = line3[11]
-			metadata["month"] = line3[12]
-			metadata["day"]= line3[13]
-			metadata["time"] = line3[15]+"000"
-			date = d.datetime.strptime(metadata["year"]+metadata["month"]+ metadata["day"]+metadata["time"], '%Y%b%d%X.%f')		
-			triggertime =Time(date)
-			metadata["triggertime"] = triggertime
-			
-			#Records the energy range
-			line4 = f.readline().split(" ")
-			metadata["e_range"]=line4[4]
-			metadata["e_units"]=line4[5]
-			
-			for i in range (4):
-				f.readline()
-				
-			line9  = f.readline().split("\t")
-			f.readline()
-			entries=[]
-			i=0
-			j=0
-			for unsplit in f.readlines():
-				entry=dict()
-				row = unsplit.split("\t")
-				if len(row) > 6:
-					for k in range(len(line9)):
-						var=line9[k]
-						val=row[k]
-						entry[var.replace(" ", "")]=float(val)
-					
-					tst = datetime.timedelta(seconds=float(entry["!Time"]))
-					entry["tst"]=tst				
-					isot =date+tst
-					entry["isotime"] = isot
-					astrotime = Time(isot)				
-					entry["time"] = astrotime.mjd
-					entry["u_time"] = "MJD"
-					entry["telescope"]= "Swift"
-					entry["instrument"]="XRT"
-					entry["countrate"]=entry["Rate"]
-					entry["mode"]="PC"
-					entry["energy"] = metadata["e_range"].split("-")
-					entry["u_energy"] = metadata["e_units"]
-					if float(entry["Ratepos"]) == 0.:
-						entry["upperlimit"]=True
-						j+=1
-					else:
-						entry["e_upper_countrate"] = entry["Ratepos"]
-						entry["e_lower_countrate"] = np.abs(entry["Rateneg"])
-						i +=1
-					entries.append(entry)
-			self.swiftmetadata = metadata
-			
-			band = "X-Ray ("+ line4[4] +") " + str(entry["u_energy"].replace("\n",""))
 			variable="countrate"
 			
+			self.swiftmetadata = metadata
 			self.bandlist.append(band)
 			self.varlist.append(variable)
 			self.nbands += 1
@@ -507,12 +525,6 @@ class TDE_Candidate:
 			if len(getattr(self.photometry, band)) > minpoints:
 				self.has_photometry = True
 				
-	def fit_data_directly(self, var, band, ax):
-		fitdata = self.dataset_to_fit(band, var)						
-		if "t" in fitdata.keys():			
-			if len(fitdata["t"]) > 2:
-				self.plot_llh_minimisation(fitdata, ax)
-				
 	def plot_llh_minimisation(self, fitdata, ax):
 		fitt = np.array(fitdata["t"])
 		fity = np.array(fitdata["y"])
@@ -530,8 +542,9 @@ class TDE_Candidate:
 			plt.ylabel(fitdata["var"])
 			maxlum = max(fity)
 			maxtime = self.mjdvismax
-			ax.axvline(maxtime, label="Peak Visual Magnitude",color="r", linestyle="--")
+			ax.axvline(maxtime, label="Peak Visual Magnitude",color="green", linestyle="--")
 		else:
+			fity = math.log10(fity)
 			plt.ylabel("Log(" +  fitdata["var"]+")")
 			maxlum = max(fity)
 			mask = fity == maxlum
@@ -552,14 +565,14 @@ class TDE_Candidate:
 		avals = [10**-3]
 		ttvals = [10., 100.]
 		cvals = [-0.2, -1.0, -2.0, -4.0]
-		fvals = [0.0]
-		N = len(avals)*len(ttvals)*len(cvals)*len(fvals)*len(offset)*len(A0vals)
+		
+		N = len(avals)*len(ttvals)*len(cvals)*len(offset)*len(A0vals)
 		
 		def llh(p, to_print=False):
 			ll=0.0
 	
 			for k, t in enumerate(fitt):
-				time = t - maxtime + p[5]
+				time = t - maxtime + p[4]
 				y = fity[k]
 				model = lc.fitfunc(time, p)
 				if y > model:
@@ -571,7 +584,7 @@ class TDE_Candidate:
 					print time, y, model, err, ((y - model)/err)**2, ll
 						
 			for k, ul_t in enumerate((fit_ul_t)):
-				time = ul_t - maxtime + p[5]
+				time = ul_t - maxtime + p[4]
 				y = fit_ul_y[k]
 				model = lc.fitfunc(time, p)
 				if y < model:
@@ -593,16 +606,15 @@ class TDE_Candidate:
 					for a in avals:
 						for tt in ttvals:
 							for c in cvals:
-								for f in fvals:
-									pinit = [A0, a, tt, c, f, i]
-									bnds = lc.return_parameter_bounds(A0)
-									out = optimize.minimize(llh, pinit, method='L-BFGS-B', bounds=bnds)
-									ll = np.sum(out.fun)
-									pbar.update(1)
-									if ll < llbest:
-										llbest= ll
-										bestout=out
-										pbest=pinit
+								pinit = [A0, a, tt, c, i]
+								bnds = lc.return_parameter_bounds(A0)
+								out = optimize.minimize(llh, pinit, method='L-BFGS-B', bounds=bnds)
+								ll = np.sum(out.fun)
+								pbar.update(1)
+								if ll < llbest:
+									llbest= ll
+									bestout=out
+									pbest=pinit
 				
 				pfinal = bestout.x
 				covar = bestout.success					
@@ -619,10 +631,23 @@ class TDE_Candidate:
 
 		bestparams = params[index]
 		
-		self.fits[fitdata["band"]] = bestparams
+		info = dict()
+		
+		for i, var in enumerate(lc.return_histogram_labels()):
+			info[var] = bestparams[i]
+			
+		info["llh"] = best
+		
+		npoints = len(fitt) + len(fit_ul_t)
+		if len(fitt) > minpoints:
+			info["chi2_per_dof"] = best/float(npoints - minpoints)
+		else:
+			raise Exception("Too few datapoints (" + str(len(fitt)) + ") for fitting a model with (" + str(minpoints) + ") parameters")
+		
+		self.fits[fitdata["band"]] = info
 		covar = covars[index]
 		
-		t_max_to_peak=bestparams[5]
+		t_max_to_peak=bestparams[4]
 		
 		fittedpeaktime = maxtime-t_max_to_peak
 		
@@ -634,8 +659,16 @@ class TDE_Candidate:
 			for t in times:
 				models.append(lc.fitfunc(t, bestparams))
 			return models
+			
+		title= self.name + " (["
+		for a in bestparams:
+			title += "{0:.6}".format(str(a))
+			title += ", "
+			
+		title += "] " + "{0:.4}".format(str(info["chi2_per_dof"])) +")" 
+		plt.title(title)
 		
-		ax.annotate(str(bestparams) +" " + str(best), xy=(0.05, 0.1), xycoords="axes fraction")
+#		ax.annotate(title, xy=(0.05, 0.1), xycoords="axes fraction")
 
 		ax.plot(plottimes, fit(shiftedtimes), label="Fit")
 		
@@ -688,24 +721,27 @@ class TDE_Candidate:
 			for band in self.bandlist:
 				if hasattr(self.photometry, band+"_"+var):
 					fitdata = self.dataset_to_fit(band, var)						
-					if "t" in fitdata.keys():			
-						if len(fitdata["t"]) > 2:
-							fig = plt.figure()	
-							ax = plt.subplot(111)
-							plt.suptitle(self.name)
-							
-							print "Minimising for candidate", self.name, "in band", band							
-							
-							self.plot_llh_minimisation(fitdata, ax)
-					
-							fig.set_size_inches(10, 7)						
-
-							if not os.path.exists(path):
-								os.mkdir(path)
-							file_name = path + band + ".pdf"
-							plt.savefig(file_name)
-							plt.close()
-							print "Saving to", file_name
+					if "t" in fitdata.keys():
+						npoints = len(fitdata["t"])
+						if npoints > 2:
+							if "upt" in fitdata.keys():
+								npoints += len(fitdata["upt"])
+							if npoints > minpoints:
+								fig = plt.figure()	
+								ax = plt.subplot(111)
+								
+								print "Minimising for candidate", self.name, "in band", band							
+								
+								self.plot_llh_minimisation(fitdata, ax)
+						
+								fig.set_size_inches(7, 5)						
+	
+								if not os.path.exists(path):
+									os.mkdir(path)
+								file_name = path + band + ".pdf"
+								plt.savefig(file_name)
+								plt.close()
+								print "Saving to", file_name
 
 		filename = path + "histogram.pdf"
 		if len(self.fits) > 0:
@@ -722,10 +758,7 @@ class TDE_Candidate:
 		
 		lists=[]
 		
-		titles, xlabels = lc.return_parameter_names()
-		
-		if len(xlabels) != ndata:
-			raise Exception("Number of parameters does not match number of labels!")
+		titles, xlabels = lc.return_all_parameter_names()
 		
 		for i in range(ndata):
 			lists.append([])
@@ -733,11 +766,11 @@ class TDE_Candidate:
 		for band in bands:
 			if band in data.keys():
 				entry = data[band]
-				for i in range(len(entry)):
-					lists[i].append(entry[i])			
+				for i, var in enumerate(xlabels):
+					lists[i].append(entry[var])			
 		
 		if len(lists[0]) > 0:
-			p.histograms_plot(titles, xlabels, lists, path, bnds=True)
+			p.histograms_plot(titles, xlabels, lists, path)
 		return lists
 				
 	def dataset_to_fit(self, band, var):
@@ -771,15 +804,6 @@ class TDE_Candidate:
 						else:
 							fitdata["up"].append(float(results["y"][i])*0.5)
 							fitdata["down"].append(float(results["y"][i])*0.5)
-								
-#					allt = results["time"]+results["upper_limit_time"]
-					
-#					fitdata["last_t"]=0.0			
-#					
-#					for j in range(len(allt)):
-#						t = allt[j]
-#						if fitdata["last_t"] < t < fitdata["maxtime"]:
-#							fitdata["last_t"]=t
 		
 		return fitdata
 				
@@ -904,9 +928,9 @@ class TDE_Candidate:
 				if var == "magnitude":
 					opticalresults.append(res)
 				
-			p.scatter_plot(folder, title, allresults)
+			p.scatter_photometry(folder, title, allresults)
 			if len(opticalresults) > 0:
-				p.scatter_plot(opticalfolder, title, opticalresults, combined=True)
+				p.scatter_photometry(opticalfolder, title, opticalresults, combined=True)
 		else:
 			"No photometry was found for", self.name
 						

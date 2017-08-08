@@ -30,13 +30,19 @@ dataset.creationtime()
 if cfg.candidate != None:
 	dataset.info_candidate(cfg.candidate)	
 	joblib.dump(dataset, savepath)
-#dataset.plot_skymap()
-#dataset.plot_spectra()
+
 
 if cfg.fit:
 	dataset.plot_all_candidates(fit=True)
-	
 	joblib.dump(dataset, savepath)
 	
-if cfg.plot:	
-	dataset.plot_fit_parameters_with_peaks()
+if cfg.plot:
+#	dataset.plot_distibutions()
+	dataset.plot_all_bands()
+	dataset.plot_2d_distributions()
+	dataset.plot_2d_fit_distributions()
+	dataset.plot_2d_fit_with_peaks()
+#	dataset.plot_fit_parameters_with_peaks()
+#	dataset.plot_fit_parameters()
+#	dataset.plot_skymap()
+#	dataset.plot_spectra()

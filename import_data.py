@@ -11,5 +11,3 @@ def run(savepath):
 		code.write(data)
 		
 	print "Catalogue is now updated to latest available version!"
-	
-
