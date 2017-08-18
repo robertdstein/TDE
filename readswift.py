@@ -7,6 +7,7 @@ Created on Mon Aug  7 14:25:22 2017
 from astropy.time import Time
 import datetime as d
 import numpy as np
+import math
 
 def run(datapath, catname):
 	metadata = dict() 
@@ -101,3 +102,39 @@ def run(datapath, catname):
 		band = "X-Ray ("+ line4[4] +") " + str(entry["u_energy"].replace("\n",""))
 
 		return band, metadata, entries
+		
+def condense(entries):
+	new=[]
+	t0 = 0.0
+	entry = entries[0]
+	times=[]
+	counts=[]
+	up_errors=0.0
+	down_errors=0.0
+	for entry in entries:
+		if "upperlimit" not in entry.keys():
+			if int(entry["time"]) > t0:
+				if len(times) > 0:
+					newentry = dict()
+					newentry["time"] = np.mean(times)
+					newentry["countrate"] = np.sum(counts)/float(len(counts))
+					newentry["e_upper_countrate"] = math.sqrt(up_errors)/float(len(counts))
+					newentry["e_lower_countrate"] = math.sqrt(down_errors)/float(len(counts))
+					new.append(newentry)
+					variables = ["u_energy", "energy", "instrument", "telescope"]
+					for var in variables:
+						newentry[var] = entry[var]
+				t0 = int(entry["time"])
+				times=[]
+				counts=[]
+				up_errors=0.0
+				down_errors=0.0
+			
+			times.append(entry["time"])
+			counts.append(entry["countrate"])
+			up_errors += entry["e_upper_countrate"]**2
+			down_errors += entry["e_lower_countrate"]**2
+			
+	print "Condensed data from", len(entries), "to", len(new)
+	return new
+			

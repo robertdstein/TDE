@@ -5,13 +5,19 @@ Created on Mon Aug  7 13:55:08 2017
 @author: steinrob
 """
 import numpy as np
+import math
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
 from matplotlib.markers import CARETDOWN
 import lightcurves as lc
 import readsupernova as rs
+
+def config_sd():
+	variables = ["fits.*.chi2_per_dof", "fits.*.tt",  "fits.*.A0", "fits.*.a","fits.*.offset", "fits.*.c"]
+	variablenames = [r"$\chi^{2}$ per degree of freedom", "Transition Times", r"$A_{0}$ in $A_{0} \exp^{-a x^{2}}$", r"a in $A_{0} \exp^{-a x^{2}}$", "Displacement from peak to Brightest Observation Date", r"$\gamma$"]
+	pairIDs=[[1,2, 0], [1,3, 0], [4,2,0], [5, 2, 0], [5, 1, 0], [5,3,0]]
+	return variables, variablenames, pairIDs
 
 def scatter_distibution(folder, title, allresults):
 	"""Plots scatter distributions
@@ -40,26 +46,28 @@ def scatter_distibution(folder, title, allresults):
 			
 			bnds = []
 			
-			for i, var in enumerate([res["xvar"], res["yvar"]]):
-				val = var.split(".")[-1]
-				labels = lc.return_histogram_labels()
-				if (val in labels) and (val != "A0"):
-					index = labels.index(val)
-					bounds = lc.return_parameter_bounds()[index]
-					
-					if i==0:
-						ax.set_xlim(bounds)
-					else:
-						ax.set_ylim(bounds)
+#			for i, var in enumerate([res["xvar"], res["yvar"]]):
+#				val = var.split(".")[-1]
+#				labels = lc.return_histogram_labels()
+#				if (val in labels) and (val != "A0"):
+#					index = labels.index(val)
+#					bounds = lc.return_parameter_bounds()[index]
+#					
+#					if i==0:
+#						ax.set_xlim(bounds)
+#					else:
+#						ax.set_ylim(bounds)
 			
 			if "z" in res.keys():
 				cm = plt.cm.get_cmap('RdYlGn_r')
 				if res["zvar"].split(".")[-1] == "chi2_per_dof":
 					ul = 2.0
+					ll=0.0
 				else:
 					ul=None
+					ll=None
 				
-				scattergraph = plt.scatter(res["x"], res["y"],c=res["z"], vmax=ul, cmap=cm)
+				scattergraph = plt.scatter(res["x"], res["y"],c=res["z"],vmin=ll, vmax=ul, cmap=cm)
 				cbar = plt.colorbar(scattergraph)
 				cbar.set_label(res["z_label"])
 				
@@ -168,7 +176,6 @@ def scatter_photometry(folder, title, allresults, combined=False, tshift=False, 
 			plt.gca().set_ylim(bottom=lims[0])
 			ax.legend()
 				
-
 		path = "graphs/" + folder + title + ".pdf"
 		
 		plt.savefig(path)
@@ -178,15 +185,15 @@ def scatter_photometry(folder, title, allresults, combined=False, tshift=False, 
 	else:
 		print "Not Saved!"
 
-def histograms_plot(titles, xlabels, values, path=None, bnds=False):
+def histograms_plot(titles, xlabels, values, path=None, bnds=False, suffix=""):
 	"""Plots histograms for a given set of variables
 	"""
 	fig = plt.figure()
 	npoints = len(titles)
 	nrows = int(float(npoints)/2.) + (npoints % 2)
 	
-	if bnds:
-		bnds = lc.return_parameter_bounds(max(values[0]))
+#	if bnds:
+#		bnds = lc.return_parameter_bounds(max(values[0]))
 	
 	if npoints > 0:
 		for i in range(0, npoints):
@@ -194,34 +201,27 @@ def histograms_plot(titles, xlabels, values, path=None, bnds=False):
 			
 			nbins = np.maximum(int(float(len(values[i]))/2.) + 1, 20)
 			
-			if bnds:
-				xmin = bnds[i][0]
-				xmax = bnds[i][1]
-				if xmin == None:
-					xmin = min(values[i])*0.9
-				if xmax == None:
-					xmax  = max(values[i])*1.1
-				histrange=[xmin, xmax]
+			median = np.median(values[i])
 			
-			else:
-				histrange=None
-				
-			n, bins, _ = plt.hist(values[i], bins=nbins, range=histrange, histtype='stepfilled', label=xlabels[i])	
-	
-			plt.title(titles[i])
-			plt.xlabel(xlabels[i])
+			print median, math.isnan(median)
+			
+			if not math.isnan(median):	
+				n, bins, _ = plt.hist(values[i], bins=nbins, histtype='stepfilled', label=xlabels[i])	
+		
+				plt.title(titles[i] + " (" + "{0:.3}".format(median)+ ")")
+				plt.xlabel(xlabels[i])
 			
 	fig.set_size_inches(15, nrows*3)
 	fig.subplots_adjust(hspace=.5)
 	
 	if path == None:	
-		path = "graphs/misc/histogram.pdf"
-		
+		path = "graphs/misc/histogram" + suffix + ".pdf"
 	else:
 		split = path.split("/")
 		name  = split[-1].split(".")
-		title = name[0]
+		title = name[0]+suffix
 		plt.suptitle(title)
+		path += "histogram"+suffix+".pdf"	
 	
 	plt.savefig(path)
 	print "Saving to", path

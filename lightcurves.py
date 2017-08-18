@@ -29,8 +29,8 @@ def return_histogram_labels():
 def return_parameter_bounds(maxlum=20):
 	return [(maxlum, maxlum+3), (3*10**-4, 8*10**-3), (2., 350), (-8., -0.2), (-400, 400)]
 
-def return_loose_parameter_bounds():
-	return[(None, None), (10**-6, None), (1., None), (-15., 0.01), (None, None)]
+def return_loose_bounds(maxlum):
+	return[(None,None), (10**-6, None), (2., 350), (None, -10**-6), (None, None)]
 	
 def default(maxlum= 30):
 	return [maxlum, 5*10**-3, 20, -2., 0.0]
