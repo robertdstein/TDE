@@ -1,60 +1,80 @@
 
-# coding: utf-8
-
-# In[16]:
-
 import numpy as np
-#from classes import Full_set
+from classes import FullSet
+import selected_candidates as sc
 
 root = "/afs/ifh.de/user/s/steinrob/scratch/PS_Data/Catalogue/"
 
 
 def run(data):
-	print data
+    """Creates a catalogue based on the TDE dataset, for use in stacking
+    analysis.
 
-	ra = []
-	dec = []
-	dist = []
-	ddate = []
-	names = []
+    Produces:
+    -   One complete catalogue with every entry containing sufficient data
+    -   One catalogue based on the Dai&Fang TDE list
+        (list defined in selected_candidates.py)
 
-	variablenames = ["ra_deg", "dec_deg", "lumdist", "mjddisc", "name"]
+    :param data: A FullSet object containing TDE data.
+    """
+    print data
 
-	for name in vars(data.TDEs):
-		tde = getattr(data.TDEs, name)
-		include = True
-		for v in variablenames:
-			if not hasattr(tde, v):
-				include = False
+    print "Data contains", len(data.TDEs.__dict__.keys()), "entries"
 
-		if include:
-			ra.append(tde.ra_deg)
-			dec.append(tde.dec_deg)
-			dist.append(tde.lumdist)
-			ddate.append(tde.mjddisc)
-			names.append(name)
+    # Loops over catalogues to be created
+    for i, save_name in enumerate(["full_TDE", "Dai_Fang_TDE"]):
+        ra = []
+        dec = []
+        distance = []
+        discovery_date = []
+        names = []
 
-	n_sources = len(ra)
+        variable_names = ["ra_deg", "dec_deg", "lumdist", "mjddisc", "name"]
 
-	sources = np.empty((n_sources), dtype=[("ra", np.float), ("dec", np.float),
-		("flux", np.float), ("n_exp", np.float), ("weight", np.float),
-		("weight_acceptance", np.float), ("weight_time", np.float),
-		("weight_distance", np.float), ("norm_time", np.float),
-		("global_weight_norm_time", np.float), ("discoverydate_mjd", np.float),
-		("distance", np.float), ('name', 'a30'),
-		])
+        to_include = [vars(data.TDEs), sc.dai_and_fang_list()][i]
 
-	sources['ra'] = np.deg2rad(ra)
-	sources['dec'] = np.deg2rad(dec)
-	sources['distance'] = np.ones_like(sources['ra'])
-	sources['flux'] = np.ones_like(sources['ra'])
-	Norm = n_sources * 1.e-9 / np.sum(sources['flux'])
-	sources['flux'] = sources['flux'] * Norm
-	sources['weight'] = np.ones_like(sources['ra'])
+        for tde_name in to_include:
+            try:
+                tde = getattr(data.TDEs, tde_name)
+            except AttributeError:
+                print sorted(data.TDEs.__dict__.keys(), key=str.lower)
+                raise Exception("Name not in catalogue.")
+            include = True
+            for v in variable_names:
+                if not hasattr(tde, v):
+                    include = False
+                    print tde_name, "is missing", v
 
-	sources['discoverydate_mjd'] = np.array(ddate)
-	sources['name'] = names
-	path = root + "full_TDE_catalogue.npy"
-	np.save(path, sources)
+            if include:
+                ra.append(tde.ra_deg)
+                dec.append(tde.dec_deg)
+                distance.append(tde.lumdist)
+                discovery_date.append(tde.mjddisc)
+                names.append(tde_name)
 
-	print "Exporting catalogue to", path
+        n_sources = len(ra)
+
+        sources = np.empty(n_sources, dtype=[
+            ("ra", np.float), ("dec", np.float), ("flux", np.float),
+            ("n_exp", np.float), ("weight", np.float),
+            ("weight_acceptance", np.float), ("weight_time", np.float),
+            ("weight_distance", np.float), ("norm_time", np.float),
+            ("global_weight_norm_time", np.float),
+            ("discoverydate_mjd", np.float), ("distance", np.float),
+            ('name', 'a30'),
+            ])
+
+        sources['ra'] = np.deg2rad(ra)
+        sources['dec'] = np.deg2rad(dec)
+        sources['distance'] = np.ones_like(sources['ra'])
+        sources['flux'] = np.ones_like(sources['ra'])
+        normalisation = n_sources * 1.e-9 / np.sum(sources['flux'])
+        sources['flux'] = sources['flux'] * normalisation
+        sources['weight'] = np.ones_like(sources['ra'])
+
+        sources['discoverydate_mjd'] = np.array(discovery_date)
+        sources['name'] = names
+        path = root + save_name + "_catalogue.npy"
+        np.save(path, sources)
+
+        print "Exporting catalogue with", n_sources, "entries, to", path
