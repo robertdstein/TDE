@@ -1,1 +1,272 @@
-{"RX J1420+53": {"hostdec": [{"source": "1", "u_value": "degrees", "value": "+53:34:11.72"}], "lumdist": [{"u_value": "Mpc", "derived": true, "value": "720", "source": "1,2,4,5"}], "photometry": [{"e_upper_luminosity": "2.56E+43", "u_energy": "keV", "telescope": "ROSAT", "instrument": "PSPC", "luminosity": "2.35E+43", "energy": ["0.3", "2.0"], "e_lower_luminosity": "2.13E+43", "u_countrate": "s^-1", "photonindex": "4.5", "countrate": "0.232907", "e_lower_flux": "3.52E-13", "flux": "3.88E-13", "nhmw": "0.0118", "u_flux": "ergs/cm^2/s", "u_time": "MJD", "e_upper_flux": "4.23E-13", "time": ["48083.6", "48083.607"], "e_countrate": "0.0214561", "source": "1"}, {"u_energy": "keV", "telescope": "ROSAT", "instrument": "PSPC", "source": "1", "luminosity": "2.36E+42", "energy": ["0.3", "2.0"], "u_countrate": "s^-1", "photonindex": "4.5", "countrate": "0.0397499", "flux": "3.89E-14", "nhmw": "0.0118", "u_flux": "ergs/cm^2/s", "u_time": "MJD", "time": ["48091.7", "48091.768"], "upperlimit": true}, {"u_energy": "keV", "telescope": "Chandra", "instrument": "ACIS-S", "source": "1", "luminosity": "2.28E+41", "energy": ["0.3", "2.0"], "u_countrate": "s^-1", "photonindex": "4.5", "countrate": "0.000655652", "flux": "3.77E-15", "nhmw": "0.0118", "u_flux": "ergs/cm^2/s", "u_time": "MJD", "time": ["52627", "52627.114"], "upperlimit": true}, {"u_energy": "keV", "telescope": "XMM", "instrument": "PN", "source": "1", "luminosity": "1.80E+44", "energy": ["0.3", "2.0"], "u_countrate": "s^-1", "photonindex": "4.5", "countrate": "0.86", "flux": "2.97E-12", "nhmw": "0.0118", "u_flux": "ergs/cm^2/s", "u_time": "MJD", "time": ["53189.3", "53189.300"], "upperlimit": true}, {"u_energy": "keV", "telescope": "Chandra", "instrument": "ACIS-S", "source": "1", "luminosity": "4.15E+41", "energy": ["0.3", "2.0"], "u_countrate": "s^-1", "photonindex": "4.5", "countrate": "0.00118853", "flux": "6.84E-15", "nhmw": "0.0118", "u_flux": "ergs/cm^2/s", "u_time": "MJD", "time": ["53246.2", "53246.311"], "upperlimit": true}], "comovingdist": [{"u_value": "Mpc", "derived": true, "value": "628", "source": "1,2,4,5"}], "name": "RX J1420+53", "alias": [{"source": "1", "value": "RX J1420+53"}], "redshift": [{"source": "1,4", "value": "0.147"}], "claimedtype": [{"source": "1", "value": "TDE?"}], "host": [{"source": "1,4", "value": "RX J1420.4+5334"}], "hostoffsetdist": [{"source": "1,2,4,5", "value": "7.03"}], "sources": [{"alias": "1", "bibcode": "2017ApJ...838..149A", "name": "2017ApJ...838..149A", "reference": "Auchettl, Guillochon, & Ramirez-Ruiz (2017)"}, {"alias": "2", "bibcode": "2016A&A...594A..13P", "name": "2016A&A...594A..13P", "reference": "Planck Collaboration et al. (2016)"}, {"alias": "3", "bibcode": "2011ApJ...737..103S", "name": "2011ApJ...737..103S", "reference": "Schlafly & Finkbeiner (2011)"}, {"alias": "4", "bibcode": "2000A&A...362L..25G", "name": "2000A&A...362L..25G", "reference": "Greiner et al. (2000)"}, {"bibcode": "2017ApJ...835...64G", "name": "The Open TDE Catalog", "reference": "Guillochon et al. (2017)", "url": "https://tde.space", "alias": "5", "secondary": true}], "ebv": [{"e_value": "0.0007", "derived": true, "value": "0.009", "source": "3,5"}], "citations": [{"source": "4", "value": "<a href='http://adsabs.harvard.edu/abs/2000A%26A...362L..25G'>Greiner et al. 2000</a>*&Dagger;"}], "discoverdate": [{"source": "1,5", "derived": true, "value": "1990/07/11"}], "ra": [{"source": "1", "u_value": "hours", "value": "14:20:24.20"}], "hostra": [{"source": "1", "u_value": "hours", "value": "14:20:24.37"}], "velocity": [{"u_value": "km/s", "derived": true, "value": "40900", "source": "5"}], "dec": [{"source": "1", "u_value": "degrees", "value": "+53:34:11.00"}], "hostoffsetang": [{"u_value": "arcseconds", "derived": true, "value": "2.65", "source": "1,5"}], "schema": "https://github.com/astrocatalogs/tidaldisruptions/blob/f405406/SCHEMA.md"}}
+{
+	"RX J1420+53": {
+		"hostdec": [
+				{
+					"source": "1", 
+					"u_value": "degrees", 
+					"value": "+53:34:11.72"
+				}
+		], 
+		"lumdist": [
+				{
+					"u_value": "Mpc", 
+					"derived": true, 
+					"value": "720", 
+					"source": "1,2,4,5"
+				}
+		], 
+		"photometry": [
+				{
+					"e_upper_luminosity": "2.56E+43", 
+					"u_energy": "keV", 
+					"telescope": "ROSAT", 
+					"instrument": "PSPC", 
+					"luminosity": "2.35E+43", 
+					"energy": [
+						"0.3", 
+						"2.0"
+					], 
+					"e_lower_luminosity": "2.13E+43", 
+					"u_countrate": "s^-1", 
+					"photonindex": "4.5", 
+					"countrate": "0.232907", 
+					"e_lower_flux": "3.52E-13", 
+					"flux": "3.88E-13", 
+					"nhmw": "0.0118", 
+					"u_flux": "ergs/cm^2/s", 
+					"u_time": "MJD", 
+					"e_upper_flux": "4.23E-13", 
+					"time": [
+						"48083.6", 
+						"48083.607"
+					], 
+					"e_countrate": "0.0214561", 
+					"source": "1"
+				}, 
+				{
+					"u_energy": "keV", 
+					"telescope": "ROSAT", 
+					"instrument": "PSPC", 
+					"source": "1", 
+					"luminosity": "2.36E+42", 
+					"energy": [
+						"0.3", 
+						"2.0"
+					], 
+					"u_countrate": "s^-1", 
+					"photonindex": "4.5", 
+					"countrate": "0.0397499", 
+					"flux": "3.89E-14", 
+					"nhmw": "0.0118", 
+					"u_flux": "ergs/cm^2/s", 
+					"u_time": "MJD", 
+					"time": [
+						"48091.7", 
+						"48091.768"
+					], 
+					"upperlimit": true
+				}, 
+				{
+					"u_energy": "keV", 
+					"telescope": "Chandra", 
+					"instrument": "ACIS-S", 
+					"source": "1", 
+					"luminosity": "2.28E+41", 
+					"energy": [
+						"0.3", 
+						"2.0"
+					], 
+					"u_countrate": "s^-1", 
+					"photonindex": "4.5", 
+					"countrate": "0.000655652", 
+					"flux": "3.77E-15", 
+					"nhmw": "0.0118", 
+					"u_flux": "ergs/cm^2/s", 
+					"u_time": "MJD", 
+					"time": [
+						"52627", 
+						"52627.114"
+					], 
+					"upperlimit": true
+				}, 
+				{
+					"u_energy": "keV", 
+					"telescope": "XMM", 
+					"instrument": "PN", 
+					"source": "1", 
+					"luminosity": "1.80E+44", 
+					"energy": [
+						"0.3", 
+						"2.0"
+					], 
+					"u_countrate": "s^-1", 
+					"photonindex": "4.5", 
+					"countrate": "0.86", 
+					"flux": "2.97E-12", 
+					"nhmw": "0.0118", 
+					"u_flux": "ergs/cm^2/s", 
+					"u_time": "MJD", 
+					"time": [
+						"53189.3", 
+						"53189.300"
+					], 
+					"upperlimit": true
+				}, 
+				{
+					"u_energy": "keV", 
+					"telescope": "Chandra", 
+					"instrument": "ACIS-S", 
+					"source": "1", 
+					"luminosity": "4.15E+41", 
+					"energy": [
+						"0.3", 
+						"2.0"
+					], 
+					"u_countrate": "s^-1", 
+					"photonindex": "4.5", 
+					"countrate": "0.00118853", 
+					"flux": "6.84E-15", 
+					"nhmw": "0.0118", 
+					"u_flux": "ergs/cm^2/s", 
+					"u_time": "MJD", 
+					"time": [
+						"53246.2", 
+						"53246.311"
+					], 
+					"upperlimit": true
+				}
+		], 
+		"comovingdist": [
+				{
+					"u_value": "Mpc", 
+					"derived": true, 
+					"value": "628", 
+					"source": "1,2,4,5"
+				}
+		], 
+		"name": "RX J1420+53", 
+		"alias": [
+				{
+					"source": "1", 
+					"value": "RX J1420+53"
+				}
+		], 
+		"redshift": [
+				{
+					"source": "1,4", 
+					"value": "0.147"
+				}
+		], 
+		"claimedtype": [
+				{
+					"source": "1", 
+					"value": "TDE?"
+				}
+		], 
+		"host": [
+				{
+					"source": "1,4", 
+					"value": "RX J1420.4+5334"
+				}
+		], 
+		"hostoffsetdist": [
+				{
+					"source": "1,2,4,5", 
+					"value": "7.03"
+				}
+		], 
+		"sources": [
+				{
+					"alias": "1", 
+					"bibcode": "2017ApJ...838..149A", 
+					"name": "2017ApJ...838..149A", 
+					"reference": "Auchettl, Guillochon, & Ramirez-Ruiz (2017)"
+				}, 
+				{
+					"alias": "2", 
+					"bibcode": "2016A&A...594A..13P", 
+					"name": "2016A&A...594A..13P", 
+					"reference": "Planck Collaboration et al. (2016)"
+				}, 
+				{
+					"alias": "3", 
+					"bibcode": "2011ApJ...737..103S", 
+					"name": "2011ApJ...737..103S", 
+					"reference": "Schlafly & Finkbeiner (2011)"
+				}, 
+				{
+					"alias": "4", 
+					"bibcode": "2000A&A...362L..25G", 
+					"name": "2000A&A...362L..25G", 
+					"reference": "Greiner et al. (2000)"
+				}, 
+				{
+					"bibcode": "2017ApJ...835...64G", 
+					"name": "The Open TDE Catalog", 
+					"reference": "Guillochon et al. (2017)", 
+					"url": "https://tde.space", 
+					"alias": "5", 
+					"secondary": true
+				}
+		], 
+		"ebv": [
+				{
+					"e_value": "0.0007", 
+					"derived": true, 
+					"value": "0.009", 
+					"source": "3,5"
+				}
+		], 
+		"citations": [
+				{
+					"source": "4", 
+					"value": "<a href='http://adsabs.harvard.edu/abs/2000A%26A...362L..25G'>Greiner et al. 2000</a>*&Dagger;"
+				}
+		], 
+		"discoverdate": [
+				{
+					"source": "1,5", 
+					"derived": true, 
+					"value": "1990/07/11"
+				}
+		], 
+		"ra": [
+				{
+					"source": "1", 
+					"u_value": "hours", 
+					"value": "14:20:24.20"
+				}
+		], 
+		"hostra": [
+				{
+					"source": "1", 
+					"u_value": "hours", 
+					"value": "14:20:24.37"
+				}
+		], 
+		"velocity": [
+				{
+					"u_value": "km/s", 
+					"derived": true, 
+					"value": "40900", 
+					"source": "5"
+				}
+		], 
+		"dec": [
+				{
+					"source": "1", 
+					"u_value": "degrees", 
+					"value": "+53:34:11.00"
+				}
+		], 
+		"hostoffsetang": [
+				{
+					"u_value": "arcseconds", 
+					"derived": true, 
+					"value": "2.65", 
+					"source": "1,5"
+				}
+		], 
+		"schema": "https://github.com/astrocatalogs/tidaldisruptions/blob/f405406/SCHEMA.md"
+	}
+}

@@ -211,18 +211,17 @@ class FullSet:
         """ Plots binned distributions of candidates for each variable in 'variables'.
         """
         variables = ["redshift", "comovingdist", "lumdist", "hostoffsetdist",
-                     "mjdmax", "nbands","maxabsmag",  "nhhost", "ra_float",
+                     "mjdmax", "nbands","maxabsmag", "ra_float",
                      "dec_float", "ebv"]
 
         titles = ["Redshift", "Comoving Distance", "Luminosity Distance",
                   "Host Offset Distance", "Date of Max Luminosity",
                   "Number of observational bands", "Max Absolute Magnitude",
-                  "Something cool, probably (nnhost)", "Right ascension",
-                  "Declination", "EBV"]
+                  "Right ascension", "Declination", "EBV"]
 
         xlabels = ["Redshift (z)", "Distance (MPc)", "Distance (MPc)",
-                   "Distance (?)", "Time(MJD)", "n", "", "???", "hours",
-                   "degrees","Magnitudes"]
+                   "Angular Diameter Distance", "Time(MJD)", "n", "", "hours",
+                   "degrees", "Magnitudes"]
 
         values = []
         for i in range (0, len(variables)):
@@ -230,14 +229,13 @@ class FullSet:
 
         for name in vars(self.TDEs):
             tde = getattr(self.TDEs, name)
-            if tde.has_photometry:
-                for i in range(0, len(variables)):
-                    var = variables[i]
-                    if hasattr(tde, var):
-                        val = getattr(tde, var)
-                        if not isinstance(val, float):
-                            val = getattr(tde, var).value
-                        values[i].append(float(val))
+            for i in range(0, len(variables)):
+                var = variables[i]
+                if hasattr(tde, var):
+                    val = getattr(tde, var)
+                    if not isinstance(val, float):
+                        val = getattr(tde, var).value
+                    values[i].append(float(val))
 
         print "Plotting histograms for the following:", titles
         p.histograms_plot(titles, xlabels, values)
@@ -412,8 +410,7 @@ class FullSet:
         self.plot_fit_parameters(bands=xrbs, savepath=savepath, root=root)
 
     def plot_spectra(self):
-        """Plots the spectrum for each candidate  which has one
-        """
+        """Plots a spectrum for each candidate with spectral data. """
         for name in vars(self.TDEs):
             tde = getattr(self.TDEs, name)
             if tde.has_spectra:
@@ -430,7 +427,7 @@ class FullSet:
 
         for name in vars(self.TDEs):
             tde = getattr(self.TDEs, name)
-            if hasattr(tde, "ra_deg") and hasattr(tde, "redshift"):
+            if (hasattr(tde, "ra_deg")) and (hasattr(tde, "redshift")):
                 ra.append(float(tde.ra_deg))
                 dec.append(float(tde.dec_deg))
                 rs.append(float(tde.redshift.value))
@@ -443,7 +440,8 @@ class FullSet:
         plt.subplot(111, projection="aitoff")
 
         cm = plt.cm.get_cmap('RdYlGn_r')
-        sc = plt.scatter(wrapAround180(ra),np.deg2rad(dec), c=rs, s=35, cmap=cm)
+        sc = plt.scatter(
+            wrapAround180(ra), np.deg2rad(dec), c=rs, s=35, cmap=cm)
         cbar = plt.colorbar(sc)
         cbar.set_label('Redshift(z)')
         plt.show()
@@ -452,6 +450,8 @@ class FullSet:
         print "Saving to", path
         plt.savefig(path)
         plt.close()
+
+        print rs, max(rs), len(rs)
 
     def add_supernova_fits(self):
         self.sn_fits = rs.plot()

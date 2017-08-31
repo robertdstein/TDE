@@ -1,23 +1,152 @@
 {
-	"NGC 247":{
+    "UGC 01791":{
+      "sources": [
+        {
+          "alias": "NEW1",
+          "bibcode": "2016A&A...586A...9H",
+          "name": "2016A&A...586A...9H",
+          "reference": "K. Hryniewicz and R. Walter (2015)",
+          "url": "https://arxiv.org/abs/1505.06612"
+        }],
+		"discoverdate":[
+          {
+            "value": "2005/01/09",
+            "source": "NEW1"
+          }
+
+        ],
+        "maxdate":[
+            {
+                "value": "2005/02/27",
+                "source": "NEW1"
+            }
+        ]
+
+    },
+
+    "PGC 015259":{
+		"discoverdate":[
+			{
+				"value":"2010/02/08"
+			}
+
+        ],
+        "maxdate":[
+            {
+                "value": "2010/02/11"
+            }
+        ]
+
+    },
+
+    "NGC 6021":{
+		"discoverdate":[
+			{
+				"value":"2005/01/02"
+			}
+
+        ],
+        "maxdate":[
+            {
+                "value": "2005/02/04"
+            }
+        ]
+
+    },
+
+    "UGC 03317":{
+		"discoverdate":[
+			{
+				"value":"2010/09/22"
+			}
+
+        ],
+        "maxdate":[
+            {
+                "value": "2010/09/29"
+            }
+        ]
+
+    },
+
+    "PGC 170392":{
+		"discoverdate":[
+			{
+				"value":"2005/11/28"
+			}
+
+        ],
+        "maxdate":[
+            {
+                "value": "2005/12/26"
+            }
+        ]
+
+    },
+
+    "PGC 1185375":{
+		"discoverdate":[
+			{
+				"value":"2010/02/03"
+			}
+
+        ],
+        "maxdate":[
+            {
+                "value": "2010/03/03"
+            }
+        ]
+
+    },
+
+    "PGC 133344":{
+		"discoverdate":[
+			{
+				"value":"2005/03/17"
+			}
+
+        ],
+        "maxdate":[
+            {
+                "value": "2005/04/20"
+            }
+        ]
+
+    },
+
+    "PGC 1190358":{
+		"discoverdate":[
+			{
+				"value":"2009/12/29"
+			}
+
+        ],
+        "maxdate":[
+            {
+                "value": "2010/03/08"
+            }
+        ]
+
+    },
+
+    "PGC 1127938":{
+		"discoverdate":[
+			{
+				"value":"2007/01/08"
+			}
+
+        ],
+        "maxdate":[
+            {
+                "value": "2007/01/15"
+            }
+        ]
+
+    },
+
+    "NGC 247":{
 		"schema":"https://github.com/astrocatalogs/tidaldisruptions/blob/f405406/SCHEMA.md",
 		"name":"NGC247",
-		"sources":[
-			{
-				"name":"2017ApJ...838..149A",
-				"bibcode":"2017ApJ...838..149A",
-				"reference":"Auchettl, Guillochon, & Ramirez-Ruiz (2017)",
-				"alias":"1"
-			},
-			{
-				"name":"The Open TDE Catalog",
-				"bibcode":"2017ApJ...835...64G",
-				"reference":"Guillochon et al. (2017)",
-				"secondary":true,
-				"url":"https://tde.space",
-				"alias":"2"
-			}
-		],
 		"alias":[
 			{
 				"value":"NGC247",

@@ -53,6 +53,7 @@ if cfg.supernova:
     joblib.dump(dataset, savepath)
 
 if cfg.plot:
+    dataset.plot_skymap()
     dataset.plot_distibutions()
     dataset.plot_all_bands()
     dataset.plot_2d_distributions()
@@ -62,7 +63,6 @@ if cfg.plot:
     dataset.plot_fit_parameters_with_peaks()
     dataset.plot_fit_parameters()
     dataset.plot_fit_parameters_xrays()
-    dataset.plot_skymap()
     dataset.plot_spectra()
 
 if cfg.export:

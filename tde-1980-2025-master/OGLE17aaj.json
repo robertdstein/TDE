@@ -1,1 +1,776 @@
-{"OGLE17aaj": {"hostdec": [{"u_value": "degrees", "derived": true, "value": "-71:04:15.8", "source": "4"}], "photometry": [{"e_magnitude": "0.314", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.342", "u_time": "MJD", "time": "57415.09311"}, {"e_magnitude": "0.309", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.302", "u_time": "MJD", "time": "57426.03896"}, {"e_magnitude": "0.156", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.925", "u_time": "MJD", "time": "57429.05089"}, {"e_magnitude": "0.200", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.006", "u_time": "MJD", "time": "57436.04533"}, {"e_magnitude": "0.256", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.546", "u_time": "MJD", "time": "57442.01511"}, {"e_magnitude": "0.216", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.030", "u_time": "MJD", "time": "57450.01552"}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57601.42780", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57604.41697", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57608.30158", "upperlimit": true}, {"e_magnitude": "0.354", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.390", "u_time": "MJD", "time": "57611.38297"}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57616.37979", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57621.39940", "upperlimit": true}, {"e_magnitude": "0.318", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.610", "u_time": "MJD", "time": "57623.35671"}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57626.34829", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57630.32820", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57633.30666", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57637.30032", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57643.25268", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57646.25355", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57650.25014", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57654.28559", "upperlimit": true}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57657.20622", "upperlimit": true}, {"e_magnitude": "0.403", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.805", "u_time": "MJD", "time": "57660.19760"}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57664.21433", "upperlimit": true}, {"e_magnitude": "0.225", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.265", "u_time": "MJD", "time": "57672.17800"}, {"e_magnitude": "0.365", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.381", "u_time": "MJD", "time": "57681.26194"}, {"source": "3", "system": "Vega", "band": "I", "magnitude": "22", "u_time": "MJD", "time": "57687.19900", "upperlimit": true}, {"e_magnitude": "0.222", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.254", "u_time": "MJD", "time": "57691.13939"}, {"e_magnitude": "0.160", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.876", "u_time": "MJD", "time": "57697.16199"}, {"e_magnitude": "0.217", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.927", "u_time": "MJD", "time": "57700.14565"}, {"e_magnitude": "0.548", "source": "3", "system": "Vega", "band": "I", "magnitude": "21.743", "u_time": "MJD", "time": "57704.13624"}, {"e_magnitude": "0.205", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.729", "u_time": "MJD", "time": "57708.08370"}, {"e_magnitude": "0.199", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.639", "u_time": "MJD", "time": "57712.10658"}, {"e_magnitude": "0.146", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.700", "u_time": "MJD", "time": "57719.07738"}, {"e_magnitude": "0.150", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.304", "u_time": "MJD", "time": "57735.10756"}, {"e_magnitude": "0.090", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.976", "u_time": "MJD", "time": "57738.08036"}, {"e_magnitude": "0.089", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.132", "u_time": "MJD", "time": "57744.10776"}, {"e_magnitude": "0.089", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.140", "u_time": "MJD", "time": "57744.10776"}, {"e_magnitude": "0.080", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.905", "u_time": "MJD", "time": "57754.07246"}, {"e_magnitude": "0.082", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.921", "u_time": "MJD", "time": "57754.07246"}, {"e_magnitude": "0.071", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.942", "u_time": "MJD", "time": "57756.10035"}, {"e_magnitude": "0.061", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.714", "u_time": "MJD", "time": "57758.09523"}, {"e_magnitude": "0.108", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.064", "u_time": "MJD", "time": "57761.07543"}, {"e_magnitude": "0.101", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.917", "u_time": "MJD", "time": "57764.12345"}, {"e_magnitude": "0.164", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.997", "u_time": "MJD", "time": "57765.08498"}, {"e_magnitude": "0.068", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.913", "u_time": "MJD", "time": "57768.04867"}, {"e_magnitude": "0.093", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.115", "u_time": "MJD", "time": "57769.03585"}, {"e_magnitude": "0.103", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.131", "u_time": "MJD", "time": "57781.01884"}, {"e_magnitude": "0.091", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.912", "u_time": "MJD", "time": "57785.01008"}, {"e_magnitude": "0.104", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.163", "u_time": "MJD", "time": "57787.02654"}, {"e_magnitude": "0.104", "source": "3", "system": "Vega", "band": "I", "magnitude": "19.919", "u_time": "MJD", "time": "57789.03516"}, {"e_magnitude": "0.135", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.061", "u_time": "MJD", "time": "57791.04055"}, {"e_magnitude": "0.123", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.076", "u_time": "MJD", "time": "57796.03121"}, {"e_magnitude": "0.159", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.223", "u_time": "MJD", "time": "57797.00233"}, {"e_magnitude": "0.095", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.017", "u_time": "MJD", "time": "57800.04193"}, {"e_magnitude": "0.117", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.151", "u_time": "MJD", "time": "57802.00838"}, {"e_magnitude": "0.140", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.346", "u_time": "MJD", "time": "57809.03151"}, {"e_magnitude": "0.244", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.767", "u_time": "MJD", "time": "57916.42242"}, {"e_magnitude": "0.108", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.233", "u_time": "MJD", "time": "57924.43585"}, {"e_magnitude": "0.138", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.416", "u_time": "MJD", "time": "57934.44469"}, {"e_magnitude": "0.163", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.388", "u_time": "MJD", "time": "57944.38099"}, {"e_magnitude": "0.202", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.517", "u_time": "MJD", "time": "57946.40037"}, {"e_magnitude": "0.329", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.653", "u_time": "MJD", "time": "57952.44493"}, {"e_magnitude": "0.152", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.522", "u_time": "MJD", "time": "57956.34734"}, {"e_magnitude": "0.185", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.509", "u_time": "MJD", "time": "57966.39654"}, {"e_magnitude": "0.186", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.303", "u_time": "MJD", "time": "57972.43100"}, {"e_magnitude": "0.196", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.702", "u_time": "MJD", "time": "57980.34890"}, {"e_magnitude": "0.173", "source": "3", "system": "Vega", "band": "I", "magnitude": "20.700", "u_time": "MJD", "time": "57985.35029"}], "name": "OGLE17aaj", "alias": [{"source": "2,3", "value": "OGLE17aaj"}], "maxdate": [{"source": "3,4", "derived": true, "value": "2017/01/05"}], "maxappmag": [{"source": "3,4", "derived": true, "value": "19.71"}], "maxvisualappmag": [{"source": "3,4", "derived": true, "value": "19.71"}], "claimedtype": [{"source": "2", "value": "TDE"}], "host": [{"source": "2", "value": "GALEXASC J015624.70-710415.8"}], "maxvisualband": [{"source": "3,4", "derived": true, "value": "I"}], "maxvisualdate": [{"source": "3,4", "derived": true, "value": "2017/01/05"}], "maxband": [{"source": "3,4", "derived": true, "value": "I"}], "sources": [{"alias": "1", "bibcode": "2011ApJ...737..103S", "name": "2011ApJ...737..103S", "reference": "Schlafly & Finkbeiner (2011)"}, {"alias": "2", "name": "ATel 9977"}, {"url": "http://ogle.astrouw.edu.pl/ogle4/transients/transients.html", "alias": "3", "name": "OGLE-IV Transient Detection System"}, {"bibcode": "2017ApJ...835...64G", "name": "The Open TDE Catalog", "reference": "Guillochon et al. (2017)", "url": "https://tde.space", "alias": "4", "secondary": true}], "ebv": [{"e_value": "0.0006", "derived": true, "value": "0.0243", "source": "1,4"}], "discoverdate": [{"source": "3,4", "derived": true, "value": "2016/01/28"}], "ra": [{"source": "2", "u_value": "hours", "value": "01:56:24.93"}], "hostra": [{"u_value": "hours", "derived": true, "value": "01:56:24.70", "source": "4"}], "dec": [{"source": "2", "u_value": "degrees", "value": "-71:04:15.7"}], "hostoffsetang": [{"u_value": "arcseconds", "derived": true, "value": "3.451", "source": "2,4"}], "schema": "https://github.com/astrocatalogs/tidaldisruptions/blob/f405406/SCHEMA.md"}}
+{
+	"OGLE17aaj": {
+		"hostdec": [
+				{
+					"u_value": "degrees", 
+					"derived": true, 
+					"value": "-71:04:15.8", 
+					"source": "4"
+				}
+		], 
+		"photometry": [
+				{
+					"e_magnitude": "0.314", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.342", 
+					"u_time": "MJD", 
+					"time": "57415.09311"
+				}, 
+				{
+					"e_magnitude": "0.309", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.302", 
+					"u_time": "MJD", 
+					"time": "57426.03896"
+				}, 
+				{
+					"e_magnitude": "0.156", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.925", 
+					"u_time": "MJD", 
+					"time": "57429.05089"
+				}, 
+				{
+					"e_magnitude": "0.200", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.006", 
+					"u_time": "MJD", 
+					"time": "57436.04533"
+				}, 
+				{
+					"e_magnitude": "0.256", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.546", 
+					"u_time": "MJD", 
+					"time": "57442.01511"
+				}, 
+				{
+					"e_magnitude": "0.216", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.030", 
+					"u_time": "MJD", 
+					"time": "57450.01552"
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57601.42780", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57604.41697", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57608.30158", 
+					"upperlimit": true
+				}, 
+				{
+					"e_magnitude": "0.354", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.390", 
+					"u_time": "MJD", 
+					"time": "57611.38297"
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57616.37979", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57621.39940", 
+					"upperlimit": true
+				}, 
+				{
+					"e_magnitude": "0.318", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.610", 
+					"u_time": "MJD", 
+					"time": "57623.35671"
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57626.34829", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57630.32820", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57633.30666", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57637.30032", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57643.25268", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57646.25355", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57650.25014", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57654.28559", 
+					"upperlimit": true
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57657.20622", 
+					"upperlimit": true
+				}, 
+				{
+					"e_magnitude": "0.403", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.805", 
+					"u_time": "MJD", 
+					"time": "57660.19760"
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57664.21433", 
+					"upperlimit": true
+				}, 
+				{
+					"e_magnitude": "0.225", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.265", 
+					"u_time": "MJD", 
+					"time": "57672.17800"
+				}, 
+				{
+					"e_magnitude": "0.365", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.381", 
+					"u_time": "MJD", 
+					"time": "57681.26194"
+				}, 
+				{
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "22", 
+					"u_time": "MJD", 
+					"time": "57687.19900", 
+					"upperlimit": true
+				}, 
+				{
+					"e_magnitude": "0.222", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.254", 
+					"u_time": "MJD", 
+					"time": "57691.13939"
+				}, 
+				{
+					"e_magnitude": "0.160", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.876", 
+					"u_time": "MJD", 
+					"time": "57697.16199"
+				}, 
+				{
+					"e_magnitude": "0.217", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.927", 
+					"u_time": "MJD", 
+					"time": "57700.14565"
+				}, 
+				{
+					"e_magnitude": "0.548", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "21.743", 
+					"u_time": "MJD", 
+					"time": "57704.13624"
+				}, 
+				{
+					"e_magnitude": "0.205", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.729", 
+					"u_time": "MJD", 
+					"time": "57708.08370"
+				}, 
+				{
+					"e_magnitude": "0.199", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.639", 
+					"u_time": "MJD", 
+					"time": "57712.10658"
+				}, 
+				{
+					"e_magnitude": "0.146", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.700", 
+					"u_time": "MJD", 
+					"time": "57719.07738"
+				}, 
+				{
+					"e_magnitude": "0.150", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.304", 
+					"u_time": "MJD", 
+					"time": "57735.10756"
+				}, 
+				{
+					"e_magnitude": "0.090", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.976", 
+					"u_time": "MJD", 
+					"time": "57738.08036"
+				}, 
+				{
+					"e_magnitude": "0.089", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.132", 
+					"u_time": "MJD", 
+					"time": "57744.10776"
+				}, 
+				{
+					"e_magnitude": "0.089", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.140", 
+					"u_time": "MJD", 
+					"time": "57744.10776"
+				}, 
+				{
+					"e_magnitude": "0.080", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.905", 
+					"u_time": "MJD", 
+					"time": "57754.07246"
+				}, 
+				{
+					"e_magnitude": "0.082", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.921", 
+					"u_time": "MJD", 
+					"time": "57754.07246"
+				}, 
+				{
+					"e_magnitude": "0.071", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.942", 
+					"u_time": "MJD", 
+					"time": "57756.10035"
+				}, 
+				{
+					"e_magnitude": "0.061", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.714", 
+					"u_time": "MJD", 
+					"time": "57758.09523"
+				}, 
+				{
+					"e_magnitude": "0.108", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.064", 
+					"u_time": "MJD", 
+					"time": "57761.07543"
+				}, 
+				{
+					"e_magnitude": "0.101", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.917", 
+					"u_time": "MJD", 
+					"time": "57764.12345"
+				}, 
+				{
+					"e_magnitude": "0.164", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.997", 
+					"u_time": "MJD", 
+					"time": "57765.08498"
+				}, 
+				{
+					"e_magnitude": "0.068", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.913", 
+					"u_time": "MJD", 
+					"time": "57768.04867"
+				}, 
+				{
+					"e_magnitude": "0.093", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.115", 
+					"u_time": "MJD", 
+					"time": "57769.03585"
+				}, 
+				{
+					"e_magnitude": "0.103", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.131", 
+					"u_time": "MJD", 
+					"time": "57781.01884"
+				}, 
+				{
+					"e_magnitude": "0.091", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.912", 
+					"u_time": "MJD", 
+					"time": "57785.01008"
+				}, 
+				{
+					"e_magnitude": "0.104", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.163", 
+					"u_time": "MJD", 
+					"time": "57787.02654"
+				}, 
+				{
+					"e_magnitude": "0.104", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "19.919", 
+					"u_time": "MJD", 
+					"time": "57789.03516"
+				}, 
+				{
+					"e_magnitude": "0.135", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.061", 
+					"u_time": "MJD", 
+					"time": "57791.04055"
+				}, 
+				{
+					"e_magnitude": "0.123", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.076", 
+					"u_time": "MJD", 
+					"time": "57796.03121"
+				}, 
+				{
+					"e_magnitude": "0.159", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.223", 
+					"u_time": "MJD", 
+					"time": "57797.00233"
+				}, 
+				{
+					"e_magnitude": "0.095", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.017", 
+					"u_time": "MJD", 
+					"time": "57800.04193"
+				}, 
+				{
+					"e_magnitude": "0.117", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.151", 
+					"u_time": "MJD", 
+					"time": "57802.00838"
+				}, 
+				{
+					"e_magnitude": "0.140", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.346", 
+					"u_time": "MJD", 
+					"time": "57809.03151"
+				}, 
+				{
+					"e_magnitude": "0.244", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.767", 
+					"u_time": "MJD", 
+					"time": "57916.42242"
+				}, 
+				{
+					"e_magnitude": "0.108", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.233", 
+					"u_time": "MJD", 
+					"time": "57924.43585"
+				}, 
+				{
+					"e_magnitude": "0.138", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.416", 
+					"u_time": "MJD", 
+					"time": "57934.44469"
+				}, 
+				{
+					"e_magnitude": "0.163", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.388", 
+					"u_time": "MJD", 
+					"time": "57944.38099"
+				}, 
+				{
+					"e_magnitude": "0.202", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.517", 
+					"u_time": "MJD", 
+					"time": "57946.40037"
+				}, 
+				{
+					"e_magnitude": "0.329", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.653", 
+					"u_time": "MJD", 
+					"time": "57952.44493"
+				}, 
+				{
+					"e_magnitude": "0.152", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.522", 
+					"u_time": "MJD", 
+					"time": "57956.34734"
+				}, 
+				{
+					"e_magnitude": "0.185", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.509", 
+					"u_time": "MJD", 
+					"time": "57966.39654"
+				}, 
+				{
+					"e_magnitude": "0.186", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.303", 
+					"u_time": "MJD", 
+					"time": "57972.43100"
+				}, 
+				{
+					"e_magnitude": "0.196", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.702", 
+					"u_time": "MJD", 
+					"time": "57980.34890"
+				}, 
+				{
+					"e_magnitude": "0.173", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.700", 
+					"u_time": "MJD", 
+					"time": "57985.35029"
+				}, 
+				{
+					"e_magnitude": "0.126", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.601", 
+					"u_time": "MJD", 
+					"time": "57991.32338"
+				}, 
+				{
+					"e_magnitude": "0.175", 
+					"source": "3", 
+					"system": "Vega", 
+					"band": "I", 
+					"magnitude": "20.611", 
+					"u_time": "MJD", 
+					"time": "57994.31358"
+				}
+		], 
+		"name": "OGLE17aaj", 
+		"alias": [
+				{
+					"source": "2,3", 
+					"value": "OGLE17aaj"
+				}
+		], 
+		"maxdate": [
+				{
+					"source": "3,4", 
+					"derived": true, 
+					"value": "2017/01/05"
+				}
+		], 
+		"maxappmag": [
+				{
+					"source": "3,4", 
+					"derived": true, 
+					"value": "19.71"
+				}
+		], 
+		"maxvisualappmag": [
+				{
+					"source": "3,4", 
+					"derived": true, 
+					"value": "19.71"
+				}
+		], 
+		"claimedtype": [
+				{
+					"source": "2", 
+					"value": "TDE"
+				}
+		], 
+		"host": [
+				{
+					"source": "2", 
+					"value": "GALEXASC J015624.70-710415.8"
+				}
+		], 
+		"maxvisualband": [
+				{
+					"source": "3,4", 
+					"derived": true, 
+					"value": "I"
+				}
+		], 
+		"maxvisualdate": [
+				{
+					"source": "3,4", 
+					"derived": true, 
+					"value": "2017/01/05"
+				}
+		], 
+		"maxband": [
+				{
+					"source": "3,4", 
+					"derived": true, 
+					"value": "I"
+				}
+		], 
+		"sources": [
+				{
+					"alias": "1", 
+					"bibcode": "2011ApJ...737..103S", 
+					"name": "2011ApJ...737..103S", 
+					"reference": "Schlafly & Finkbeiner (2011)"
+				}, 
+				{
+					"alias": "2", 
+					"name": "ATel 9977"
+				}, 
+				{
+					"url": "http://ogle.astrouw.edu.pl/ogle4/transients/transients.html", 
+					"alias": "3", 
+					"name": "OGLE-IV Transient Detection System"
+				}, 
+				{
+					"bibcode": "2017ApJ...835...64G", 
+					"name": "The Open TDE Catalog", 
+					"reference": "Guillochon et al. (2017)", 
+					"url": "https://tde.space", 
+					"alias": "4", 
+					"secondary": true
+				}
+		], 
+		"ebv": [
+				{
+					"e_value": "0.0006", 
+					"derived": true, 
+					"value": "0.0243", 
+					"source": "1,4"
+				}
+		], 
+		"discoverdate": [
+				{
+					"source": "3,4", 
+					"derived": true, 
+					"value": "2016/01/28"
+				}
+		], 
+		"ra": [
+				{
+					"source": "2", 
+					"u_value": "hours", 
+					"value": "01:56:24.93"
+				}
+		], 
+		"hostra": [
+				{
+					"u_value": "hours", 
+					"derived": true, 
+					"value": "01:56:24.70", 
+					"source": "4"
+				}
+		], 
+		"dec": [
+				{
+					"source": "2", 
+					"u_value": "degrees", 
+					"value": "-71:04:15.7"
+				}
+		], 
+		"hostoffsetang": [
+				{
+					"u_value": "arcseconds", 
+					"derived": true, 
+					"value": "3.451", 
+					"source": "2,4"
+				}
+		], 
+		"schema": "https://github.com/astrocatalogs/tidaldisruptions/blob/f405406/SCHEMA.md"
+	}
+}
