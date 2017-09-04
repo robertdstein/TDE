@@ -1,5 +1,4 @@
 import zipfile
-import math
 import json
 import datetime
 import matplotlib
@@ -10,7 +9,6 @@ from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 import os.path
-
 import lightcurves as lc
 import plotting as p
 import readswift
@@ -18,23 +16,29 @@ import readsupernova as rs
 import selected_candidates as sc
 import loglikelihoodminimisation as llh
 
-minpoints = len(lc.return_histogram_labels())
+# Sets the minimum number of points required for a curve fit
+# Number of measurements must at least equal number of model parameters
+
+minimum_points = len(lc.return_histogram_labels())
 
 
-def wrapAround180(ra_deg):
+def wrap_around_180(ra_deg):
     ra = np.deg2rad(ra_deg)
     ra[ra > np.pi] -= 2*np.pi
     return ra
 
 
-def magtolum(absmag):
+def magnitude_to_luminosity(absolute_magnitude):
     """Convert an absolute magnitude to a distance.
+
+    :param absolute_magnitude: Absolute Magnitude
+    :return: luminosity
     """
-    solarlum = 3.826 * 10**33
-    solarabsmag = 4.75
-    exponent = (solarabsmag - absmag)/2.5
-    lum = solarlum * 10 ** exponent
-    return lum
+    solar_luminosity = 3.826 * 10 ** 33
+    solar_absolute_magnitude = 4.75
+    exponent = (solar_absolute_magnitude - absolute_magnitude) / 2.5
+    luminosity = solar_luminosity * 10 ** exponent
+    return luminosity
 
 
 class FullSet:
@@ -43,12 +47,14 @@ class FullSet:
     def __init__(self, path):
         self.path = path
         self.TDEs = container()
-        self.totalentries = 0
+        self.total_entries = 0
         self.candidates_with_photometry = 0
         self.prime_candidates = 0
         self.all_available_bands = []
         self.best_list = []
         self.extract()
+        self.update_time = datetime.datetime.now()
+        self.creation_time = datetime.datetime.now()
 
     def extract(self):
         """Extract all data from tde.zip.
@@ -58,27 +64,29 @@ class FullSet:
         self.update_time = datetime.datetime.now()
         self.creation_time = datetime.datetime(*zf.infolist()[0].date_time)
 
-        filelist = zf.namelist()[2:]
+        file_list = zf.namelist()
+        remove = ["tde-1980-2025-master/", 'tde-1980-2025-master/.gitignore']
+        file_list = [x for x in file_list if x not in remove]
 
         bn = set([])
-        for name in filelist:
+        for name in file_list:
             with zf.open(name) as f:
                 data = f.read()
                 d = json.loads(data)
                 info = d.values()
 
-                self.totalentries += 1
+                self.total_entries += 1
 
                 tde = TDE_Candidate(info)
                 setattr(self.TDEs, tde.name, tde)
                 if tde.has_photometry:
                     self.candidates_with_photometry += 1
-                    for bandname in tde.bandlist:
-                        bn.add(bandname)
+                    for band_name in tde.bandlist:
+                        bn.add(band_name)
 
         self.all_available_bands = list(bn)
-        print "Dataset fully extracted. Of", self.totalentries, "we have", \
-            self.candidates_with_photometry, "with at least", minpoints, \
+        print "Dataset fully extracted. Of", self.total_entries, "we have", \
+            self.candidates_with_photometry, "with at least", minimum_points, \
             "four photometric observations in one channel."
         self.list_best()
 
@@ -90,10 +98,15 @@ class FullSet:
 
     def info_candidate(self, name):
         """Plots all available light curves for a given candidate.
+
+        :param name: Name of candidate
         """
         list_of_names = sorted(self.TDEs.__dict__.keys(), key=str.lower)
 
         print "\n"
+
+        # Checks if name is valid. If not, prints possible names and requests
+        # new input of name.
 
         while not hasattr(self.TDEs, name):
             original_name = str(name)
@@ -140,6 +153,9 @@ class FullSet:
 
     def plot_all_candidates(self, fit=False):
         """Plots all available light curves for each candidate.
+
+        :param fit: Toggle True/False for whether to fit a model to the
+        lightcurves, or simply plot them.
         """
         for name in vars(self.TDEs):
             tde = getattr(self.TDEs, name)
@@ -149,16 +165,16 @@ class FullSet:
                 self.update_time = datetime.datetime.now()
 
     def plot_all_bands(self):
-        """Plots all available light curves for each band.
-        """
+        """Plots all available light curves for each band, so that each
+        candidate contributes one light curve."""
         for band in self.all_available_bands:
             title = band
 
             folder = "bands/"
-            combifolder = "combinedbands/"
+            combined_folder = "combinedbands/"
 
-            allresults = []
-            combiresults = []
+            all_results = []
+            combined_results = []
 
             for name in vars(self.TDEs):
                 tde = getattr(self.TDEs, name)
@@ -172,16 +188,17 @@ class FullSet:
                         res["variable"] = var
                         res["label"] = name
 
-                        allresults.append(res)
+                        all_results.append(res)
                         if (var == "magnitude") & (len(res["time"]) > 0):
-                            combiresults.append(res)
+                            combined_results.append(res)
 
-            p.scatter_photometry(folder, title, allresults)
-            p.scatter_photometry(combifolder, title, combiresults,
+            p.scatter_photometry(folder, title, all_results)
+            p.scatter_photometry(combined_folder, title, combined_results,
                                  combined=True, tshift=True, sn=True)
 
     def list_best(self):
-        """Lists the TDE candidates which are most promising.
+        """Lists the TDE candidates which are most promising. The criteria
+        for this are set in the IsBest() function for the TDE class.
         """
         best = []
         ratio = []
@@ -199,6 +216,7 @@ class FullSet:
         print ratio
 
     def list_fits(self):
+        """Prints each candidate that has been fitted"""
         print "The following candidates have been fitted: \n"
         for name in vars(self.TDEs):
             tde = getattr(self.TDEs, name)
@@ -207,11 +225,12 @@ class FullSet:
                 for d in tde.fits:
                     print "\t", d, "\t", list(tde.fits[d])
 
-    def plot_distibutions(self):
-        """ Plots binned distributions of candidates for each variable in 'variables'.
+    def plot_general_properties(self, names=None, suffix=""):
+        """ Plots binned distributions of candidates for each variable in
+        'variables' list.
         """
         variables = ["redshift", "comovingdist", "lumdist", "hostoffsetdist",
-                     "mjdmax", "nbands","maxabsmag", "ra_float",
+                     "mjdmax", "nbands", "maxabsmag", "ra_float",
                      "dec_float", "ebv"]
 
         titles = ["Redshift", "Comoving Distance", "Luminosity Distance",
@@ -219,15 +238,18 @@ class FullSet:
                   "Number of observational bands", "Max Absolute Magnitude",
                   "Right ascension", "Declination", "EBV"]
 
-        xlabels = ["Redshift (z)", "Distance (MPc)", "Distance (MPc)",
-                   "Angular Diameter Distance", "Time(MJD)", "n", "", "hours",
-                   "degrees", "Magnitudes"]
+        x_labels = ["Redshift (z)", "Distance (MPc)", "Distance (MPc)",
+                    "Angular Diameter Distance", "Time(MJD)", "n", "", "hours",
+                    "degrees", "Magnitudes"]
+
+        if names is None:
+            names = vars(self.TDEs)
 
         values = []
-        for i in range (0, len(variables)):
+        for i in range(0, len(variables)):
             values.append([])
 
-        for name in vars(self.TDEs):
+        for name in names:
             tde = getattr(self.TDEs, name)
             for i in range(0, len(variables)):
                 var = variables[i]
@@ -238,16 +260,40 @@ class FullSet:
                     values[i].append(float(val))
 
         print "Plotting histograms for the following:", titles
-        p.histograms_plot(titles, xlabels, values)
+        p.histograms_plot(titles, x_labels, values, suffix=suffix)
 
-    def scatter_data_2D(self, title, variables, variable_names, pairIDs,
-                        names=None, bands=None, loose=False):
+    def plot_catalogue_general_properties(self):
+        all_catalogues = sc.return_all_catalogues()
+        for key, dictionary in all_catalogues.iteritems():
+            suffix = "_" + key
+            self.plot_general_properties(dictionary["names"], suffix)
+
+    def scatter_data_2d(self, title, variable_config, dictionary=sc.full_dict(),
+                        loose=False):
         """Plots scatter distributions of different variables
+
+        :param title: Title of the Scatter Graph
+        :param variables: List containing the attribute-name of variable to plot
+        :param variable_names: List containing the names of the variable
+        :param pairIDs: List of variable ID pairs in the form [x,y],
+        each corresponding to a subplot scatter graph in which variable
+        number x in variables is plotted against variable number y
+        :param dictionary: Contains a list of the names of candidates to be
+        included. (If None, the default full list will be used.) Also contains
+        a list of bands to be plotted. (If None, all will be included).
+        :param loose: Toggle True/False to swap between loose and restricted
+        fitting bounds
         """
         folder = "misc/"
 
+        names = dictionary["names"]
+        bands = dictionary["bands"]
+
         if names is None:
             names = vars(self.TDEs)
+
+        variables = variable_config["variables"]
+        variable_names = variable_config["variable_names"]
 
         suffixes = [""]
 
@@ -257,7 +303,7 @@ class FullSet:
         for suffix in suffixes:
 
             allvals = []
-            for pair in pairIDs:
+            for pair in variable_config["pairIDs"]:
                 res = dict()
 
                 letters = ["x", "y", "z"]
@@ -288,7 +334,7 @@ class FullSet:
                                 if (path[0] == "*") & (isinstance(val, dict)):
                                     data = []
                                     for key in val.keys():
-                                        d=val[key]
+                                        d = val[key]
                                         if (bands is not None) and \
                                                 (key not in bands):
                                             pass
@@ -315,7 +361,7 @@ class FullSet:
 
                                 path = path[1:]
 
-                            if  isinstance(val, float) or isinstance(val, list):
+                            if isinstance(val, float) or isinstance(val, list):
                                 vals.append(val)
 
                         if len(vals) == len(res["vars"]):
@@ -329,84 +375,103 @@ class FullSet:
                 if len(z) > 0:
                     res["z"] = z
 
-            p.scatter_distibution(folder, title+suffix, allvals)
+            p.scatter_distribution(folder, title + suffix, allvals)
 
     def plot_2d_distributions(self):
+        """Plots a 2d distribution for general candidate parameters"""
         title = "2D_distributions"
-        variables = ["redshift.value", "maxabsmag.value", "ebv.value",
-                     "nbands", "hostoffsetdist.value"]
-        variablenames = ["Redshift", "Max Absolute Magnitude", "EBV",
-                         "Number of observational bands",
-                         "Host Offset Distance"]
 
-        pairIDs=[[0, 1], [0, 2], [0, 3], [0, 4]]
-        self.scatter_data_2D(title, variables, variablenames, pairIDs)
+        variable_config = p.config_for_general_scatter()
 
-    def plot_2d_fit_distributions(self, names=None, bands=None,
+        all_dictionaries = sc.return_all_catalogues()
+
+        for name, dictionary in all_dictionaries.iteritems():
+            self.scatter_data_2d(title + "_" + name, variable_config,
+                                 dictionary)
+
+
+    def plot_2d_fit_distributions(self, dictionary=sc.full_dict(),
                                   title="2D_fit_distributions"):
-        variables, variablenames, pairIDs = p.config_sd()
-        self.scatter_data_2D(title, variables, variablenames, pairIDs, names,
-                             bands, loose=True)
+        """Plots 2D distributions for parameters of the fit.
 
-    def plot_2d_fit_with_peaks(self):
-        names, bands = sc.return_candidates_with_peaks()
-        title = "2D_fit_distribution_with_peaks"
-        self.plot_2d_fit_distributions(names, bands, title)
+        :param dictionary: Contains a list of the names of candidates to be
+        included. (If None, the default full list will be used.) Also contains
+        a list of bands to be plotted. (If None, all will be included).
+        :param title: Title of 2D scatter plots
+        """
+        variable_config = p.config_for_fit_scatter()
+
+        all_dictionaries = sc.return_all_catalogues()
+
+        for name, dictionary in all_dictionaries.iteritems():
+            self.scatter_data_2d(title + "_" + name, variable_config,
+                                 dictionary, loose=True)
 
     def plot_2d_fit_xray(self):
-        bands, varnames = sc.xray_names()
+        bands, varnames = sc.xray_variables()
         title = "2D_fit_distribution_xray"
         self.plot_2d_fit_distributions(names=None, bands=bands, title=title)
 
     def plot_fit_parameters(self, names=None, bands=None,
-                            savepath="graphs/optical_fits/", root="combined/all"):
-        """ Plots binned distributions of candidates for each variable in 'variables'.
+                            savepath="graphs/optical_fits/",
+                            root="combined/"):
+        """Plots binned distributions of candidates for each variable
+        in 'variables'.
+
+        :param names: Names of candidates to be included. If default of None,
+        uses all available TDEs.
+        :param bands: Selects the bands to be included
+        :param savepath: Path for saving the graphs
+        :param root: Root of folder for combined histograms
         """
-        full = [[],[]]
-        titles, xlabels = lc.return_all_parameter_names()
-        if names is None:
-            names = vars(self.TDEs)
 
-        for name in names:
-            tde = getattr(self.TDEs, name)
-            if len(tde.fits) > 0:
-                path = savepath + tde.name + "/"
-                if not os.path.exists(path):
-                    os.mkdir(path)
-                data = tde.fit_parameter_histogram(path, bands)
+        all_dictionaries = sc.return_all_catalogues()
 
-                if len(data[0][0]) == 0:
-                    os.rmdir(path)
+        for key, dictionary in all_dictionaries.iteritems():
 
-                for i, subset in enumerate(data):
-                    for j in range(len(subset)):
-                        if len(full[i]) <len(subset):
-                            full[i].append([])
-                        full[i][j].extend(subset[j])
+            full = [[], []]
+            titles, xlabels = lc.return_all_parameter_names()
 
-        for i, name in enumerate(["", "_loose"]):
-            print "\n"
-            print name
-            print "\n"
-            print "Parameters \t Max \t \t Min \n"
+            names = dictionary["names"]
+            if names is None:
+                names = vars(self.TDEs)
 
-            for j, param in enumerate(xlabels):
-                print param, "\t \t","{0:.3}".format(float(min(full[i][j]))),\
-                    "\t \t","{0:.3}".format(float(max(full[i][j])))
-            print "\n"
-            p.histograms_plot(titles, xlabels, full[i],
-                              savepath + root + name + "_")
+            for name in names:
+                tde = getattr(self.TDEs, name)
+                if len(tde.fits) > 0:
+                    path = savepath + tde.name + "/"
+                    if not os.path.exists(path):
+                        os.mkdir(path)
+                    data = tde.fit_parameter_histogram(path, bands)
 
-    def plot_fit_parameters_with_peaks(self):
-        names, bands = sc.return_candidates_with_peaks()
-        savepath="graphs/optical_fits/"
-        root="combined/with_peak"
-        self.plot_fit_parameters(names, bands, savepath, root)
+                    if len(data[0][0]) == 0:
+                        os.rmdir(path)
+
+                    for i, subset in enumerate(data):
+                        for j in range(len(subset)):
+                            if len(full[i]) < len(subset):
+                                full[i].append([])
+                            full[i][j].extend(subset[j])
+
+            for i, name in enumerate(["", "_loose"]):
+                print "\n"
+                print name
+                print "\n"
+                print "Parameters \t Max \t \t Min \n"
+
+                for j, param in enumerate(xlabels):
+                    print param, \
+                        "\t \t", "{0:.3}".format(float(min(full[i][j]))),\
+                        "\t \t", "{0:.3}".format(float(max(full[i][j])))
+                print "\n"
+                p.histograms_plot(
+                    xlabels, xlabels, full[i],
+                    savepath + root + key + name + "_")
 
     def plot_fit_parameters_xrays(self):
-        xrbs, xvars = sc.xray_names()
+        xrbs, xvars = sc.xray_variables()
         savepath = "graphs/xrays/"
-        root="all"
+        root = "all"
         self.plot_fit_parameters(bands=xrbs, savepath=savepath, root=root)
 
     def plot_spectra(self):
@@ -441,17 +506,15 @@ class FullSet:
 
         cm = plt.cm.get_cmap('RdYlGn_r')
         sc = plt.scatter(
-            wrapAround180(ra), np.deg2rad(dec), c=rs, s=35, cmap=cm)
+            wrap_around_180(ra), np.deg2rad(dec), c=rs, s=35, cmap=cm)
         cbar = plt.colorbar(sc)
         cbar.set_label('Redshift(z)')
-        plt.show()
 
         path = "graphs/misc/skymap.pdf"
         print "Saving to", path
+        plt.tight_layout()
         plt.savefig(path)
         plt.close()
-
-        print rs, max(rs), len(rs)
 
     def add_supernova_fits(self):
         self.sn_fits = rs.plot()
@@ -466,6 +529,7 @@ class FullSet:
         for name in vars(self.TDEs):
             tde = getattr(self.TDEs, name)
             tde.swiftdata()
+
 
 class container:
     """A container for new data
@@ -497,11 +561,20 @@ class TDE_Candidate:
                     setattr(self, key, val)
             else:
                 self.group_photometry(val)
+
+        # In the Open TDE Catalog, ra/dec are only provided if different from
+        # host. Thus, sets ra/dec to equal host ra/dec if these are not given.
+
+        if not (hasattr(self, "ra")) and not (hasattr(self, "dec")):
+            if hasattr(self, "hostra") and hasattr(self, "hostdec"):
+                self.ra = self.hostra
+                self.dec = self.hostdec
+
         self.swiftdata()
         self.spectrum()
         self.coordinates()
         self.mjd_time()
-        self.isbest()
+        self.is_best()
 
     def swiftdata(self):
         """Reads datasets downloaded from SWIFT in the 0.3-10KeV range,
@@ -530,12 +603,13 @@ class TDE_Candidate:
         if hasattr(self, "ra") and hasattr(self, "dec"):
             self.ra_float = get_degrees(self.ra.value)
             self.dec_float = get_degrees(self.dec.value)
-            c = SkyCoord(self.ra.value, self.dec.value, unit=(u.hourangle, u.deg))
+            c = SkyCoord(
+                self.ra.value, self.dec.value, unit=(u.hourangle, u.deg))
             self.ra_deg = c.ra.degree
             self.dec_deg = c.dec.degree
 
-    def isbest(self):
-        """Assesses whether a given candiate is promising.
+    def is_best(self):
+        """Assesses whether a given candidate is promising.
         """
         # self.fit_xray()
         if self.has_photometry:
@@ -616,7 +690,7 @@ class TDE_Candidate:
         self.photometry = allbands
         self.nbands = float(len(bandlist))
         for band in vars(allbands):
-            if len(getattr(self.photometry, band)) > minpoints:
+            if len(getattr(self.photometry, band)) > minimum_points:
                 self.has_photometry = True
 
     def fit_xray(self):
@@ -624,7 +698,7 @@ class TDE_Candidate:
         Fits this distribution to see if it is close to the characteristic
         t^-5/3.
         """
-        xrbands, varnames = sc.xray_names()
+        xrbands, varnames = sc.xray_variables()
         path = "graphs/xrays/" + self.name + "/"
         if hasattr(self, "bandlist"):
             for (band, var) in zip(xrbands, varnames):
@@ -635,7 +709,7 @@ class TDE_Candidate:
                         if npoints > 2:
                             if "upt" in fitdata.keys():
                                 npoints += len(fitdata["upt"])
-                            if npoints > minpoints:
+                            if npoints > minimum_points:
                                 fig = plt.figure()
 
                                 print "Minimising for candidate", self.name, \
@@ -669,7 +743,7 @@ class TDE_Candidate:
                         if npoints > 2:
                             if "upt" in fitdata.keys():
                                 npoints += len(fitdata["upt"])
-                            if npoints > minpoints:
+                            if npoints > minimum_points:
                                 fig = plt.figure()
 
                                 print "Minimising for candidate", self.name, \
@@ -701,7 +775,7 @@ class TDE_Candidate:
 
             if bands is None:
                 bands = data.keys()
-                xrbs, xrvars = sc.xray_names()
+                xrbs, xrvars = sc.xray_variables()
                 bands = [x for x in bands if x not in xrbs]
 
             titles, xlabels = lc.return_all_parameter_names()

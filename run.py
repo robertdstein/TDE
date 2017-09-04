@@ -53,16 +53,14 @@ if cfg.supernova:
     joblib.dump(dataset, savepath)
 
 if cfg.plot:
-    dataset.plot_skymap()
-    dataset.plot_distibutions()
-    dataset.plot_all_bands()
+    # dataset.plot_skymap()
+    # dataset.plot_catalogue_general_properties()
+    # dataset.plot_all_bands()
     dataset.plot_2d_distributions()
     dataset.plot_2d_fit_distributions()
-    dataset.plot_2d_fit_with_peaks()
-    dataset.plot_2d_fit_xray()
-    dataset.plot_fit_parameters_with_peaks()
+    # dataset.plot_2d_fit_xray()
     dataset.plot_fit_parameters()
-    dataset.plot_fit_parameters_xrays()
+    # dataset.plot_fit_parameters_xrays()
     dataset.plot_spectra()
 
 if cfg.export:

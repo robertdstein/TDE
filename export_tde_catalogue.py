@@ -21,8 +21,10 @@ def run(data):
 
     print "Data contains", len(data.TDEs.__dict__.keys()), "entries"
 
+    export_catalogues = sc.catalogues_to_export()
+
     # Loops over catalogues to be created
-    for i, save_name in enumerate(["full_TDE", "Dai_Fang_TDE"]):
+    for catalogue_name, dictionary in export_catalogues.iteritems():
         ra = []
         dec = []
         distance = []
@@ -31,9 +33,10 @@ def run(data):
 
         variable_names = ["ra_deg", "dec_deg", "lumdist", "mjddisc", "name"]
 
-        to_include = [vars(data.TDEs), sc.dai_and_fang_list()][i]
+        if dictionary["names"] is None:
+            dictionary["names"] = vars(data.TDEs)
 
-        for tde_name in to_include:
+        for tde_name in dictionary["names"]:
             try:
                 tde = getattr(data.TDEs, tde_name)
             except AttributeError:
@@ -74,7 +77,7 @@ def run(data):
 
         sources['discoverydate_mjd'] = np.array(discovery_date)
         sources['name'] = names
-        path = root + save_name + "_catalogue.npy"
+        path = root + catalogue_name + "_catalogue.npy"
         np.save(path, sources)
 
         print "Exporting catalogue with", n_sources, "entries, to", path

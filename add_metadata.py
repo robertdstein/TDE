@@ -6,28 +6,50 @@ import re
 
 def run(zip_file_name="/afs/ifh.de/user/s/steinrob/Desktop/python/TDE/tde_cat"
                       ".zip"):
+    """Function to modify the ZIP file downloaded from the Open TDE
+    catalogue. It incorporates additional metadata stored in the same
+    directory, under the name metadata.json
+
+    Creates a new ZIP file under the name temp.zip, which is filled by
+    updated files. The original zip catalogue is then removed, and replaced
+    with temp.zip
+
+    :param zip_file_name: Path of TDE Zip file
+    """
+
+    # Finds root of catalogue, giving metadata path
     root = "/" .join(zip_file_name.split("/")[:-1]) + "/"
 
     metadata_path = root + "metadata.json"
     print "Loading additional metadata in", metadata_path
 
+    # Opens both old and new zip files concurrently
     zip_path = zip_file_name
     temp_path = root + "temp.zip"
     with zipfile.ZipFile(zip_path, 'r') as zf:
         with zipfile.ZipFile(temp_path, 'w') as tf:
-            filelist = zf.namelist()[2:]
+            file_list = zf.namelist()[2:]
             with open(metadata_path) as metadata:
                 md = json.load(metadata)
-                for filename in filelist:
+
+                # Loops over each file in TDE zip
+
+                for filename in file_list:
                     with zf.open(filename, "r") as f:
                         data = f.read()
                         d = json.loads(data)
                         name = d.keys()[0]
+
+                        # Checks for additional metadata
+
                         if name in md.keys():
                             print "Found additional metadata for", name, ": ",
                             new_data = md[name]
 
-                            print type(new_data)
+                            # If new sources are present, renumbers the sources
+                            # in the metadata file (Which are named according
+                            # to NEW1, NEW2 etc.), with the appropriate
+                            # integers, following the existing sources.
 
                             if "sources" in new_data.keys():
 
@@ -39,41 +61,35 @@ def run(zip_file_name="/afs/ifh.de/user/s/steinrob/Desktop/python/TDE/tde_cat"
 
                                 for new_source in new_data["sources"]:
                                     if "NEW" in new_source["alias"]:
-                                        print new_source
-                                        print new_data["sources"]
-                                        new_ID = str(source_no)
+                                        new_id = str(source_no)
                                         old_json = json.dumps(new_data)
                                         new_json = re.sub(
-                                            new_source["alias"], new_ID,
+                                            new_source["alias"], new_id,
                                             old_json)
                                         new_data = json.loads(new_json)
                                         source_no += 1
-                                        print new_data["sources"]
-                                    else:
-                                        print "FALSE!"
-                                raw_input("prompt")
-                            else:
-                                print "No new source provided for metadata"
 
-                            for key in md[name].keys():
+                            for key in new_data.keys():
                                 if key not in d[name].keys():
                                     print key,
                                     d[name][key] = new_data[key]
 
                                 elif key == "sources":
                                     added = [x for x in new_data[key]]
-                                    print d[name][key]
                                     d[name][key].extend(added)
-                                    print d[name][key]
-                                    print added
 
                             print ""
+
+                        # Sets the spacing structure of the json file to be
+                        # tabs, in order to match the pre-existing format
+                        # used by the Open TDE Catalog
 
                         g = json.dumps(d, indent=4)
                         tabbed_g = re.sub(
                             '\n +', lambda match: '\n' + '\t' * (
                                 len(match.group().strip('\n')) / 3),
                             g)
+
                         tf.writestr(filename, tabbed_g)
 
     os.remove(zip_path)
