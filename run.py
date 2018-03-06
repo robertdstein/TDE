@@ -18,8 +18,9 @@ parser.add_argument("-e", "--export", action="store_true")
 cfg = parser.parse_args()
 
 root_path = "/afs/ifh.de/user/s/steinrob/Desktop/python/TDE/"
+output_path = "/afs/ifh.de/user/s/steinrob/scratch/TDE_Output/"
 
-sourcepath = root_path + "tde_cat.zip"
+sourcepath = output_path + "tde_cat.zip"
 varpath = root_path + "variables.csv"
 savepath = root_path + "pickle/dataset.pkl"
 
@@ -30,7 +31,7 @@ if not cfg.update and os.path.exists(savepath):
 else:
     i.run(sourcepath)
     if cfg.metadata:
-        md.run(sourcepath)
+        md.run(sourcepath, root_path)
     dataset = FullSet(sourcepath)
     joblib.dump(dataset, savepath)
 
@@ -53,15 +54,15 @@ if cfg.supernova:
     joblib.dump(dataset, savepath)
 
 if cfg.plot:
-    # dataset.plot_skymap()
-    # dataset.plot_catalogue_general_properties()
+    dataset.plot_skymap()
+    dataset.plot_catalogue_general_properties()
     # dataset.plot_all_bands()
     dataset.plot_2d_distributions()
-    dataset.plot_2d_fit_distributions()
+    # dataset.plot_2d_fit_distributions()
     # dataset.plot_2d_fit_xray()
-    dataset.plot_fit_parameters()
+    # dataset.plot_fit_parameters()
     # dataset.plot_fit_parameters_xrays()
-    dataset.plot_spectra()
+    # dataset.plot_spectra()
 
 if cfg.export:
     export_tde_catalogue.run(dataset)

@@ -9,24 +9,33 @@ from astropy.time import Time
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 import os.path
+import string
+from ned import check_name, check_coordinate
+from tabulate import tabulate
 import lightcurves as lc
 import plotting as p
 import readswift
 import readsupernova as rs
 import selected_candidates as sc
 import loglikelihoodminimisation as llh
+import ConfigParser
+import math
 
 # Sets the minimum number of points required for a curve fit
 # Number of measurements must at least equal number of model parameters
 
 minimum_points = len(lc.return_histogram_labels())
 
+# Sets the root directory containing scripts and config files/subdirectories
+root = "/afs/ifh.de/user/s/steinrob/Desktop/python/The-Flux-Evaluator/"
+
+conf = ConfigParser.ConfigParser()
+config_path = root + "data_configs/full.ini"
 
 def wrap_around_180(ra_deg):
     ra = np.deg2rad(ra_deg)
     ra[ra > np.pi] -= 2*np.pi
     return ra
-
 
 def magnitude_to_luminosity(absolute_magnitude):
     """Convert an absolute magnitude to a distance.
@@ -39,7 +48,6 @@ def magnitude_to_luminosity(absolute_magnitude):
     exponent = (solar_absolute_magnitude - absolute_magnitude) / 2.5
     luminosity = solar_luminosity * 10 ** exponent
     return luminosity
-
 
 class FullSet:
     """The full set of all TDE candidates
@@ -55,6 +63,10 @@ class FullSet:
         self.extract()
         self.update_time = datetime.datetime.now()
         self.creation_time = datetime.datetime.now()
+        self.data_table = np.nan
+        self.data_dict = np.nan
+        self.list_catalogue()
+        self.export_catalogue_to_wikitext()
 
     def extract(self):
         """Extract all data from tde.zip.
@@ -84,11 +96,18 @@ class FullSet:
                     for band_name in tde.bandlist:
                         bn.add(band_name)
 
+        if hasattr(self.TDEs, "NGC247") and hasattr(self.TDEs, "NGC 247"):
+            print "Removing duplicate entry of NGC 247"
+            self.total_entries -= 1
+            if self.TDEs.NGC247.has_photometry:
+                self.candidates_with_photometry -= 1
+            del self.TDEs.NGC247
+
         self.all_available_bands = list(bn)
         print "Dataset fully extracted. Of", self.total_entries, "we have", \
             self.candidates_with_photometry, "with at least", minimum_points, \
             "four photometric observations in one channel."
-        self.list_best()
+        # self.list_best()
 
     def creationtime(self):
         """Returns the time that the online catalogue was last updated
@@ -196,6 +215,160 @@ class FullSet:
             p.scatter_photometry(combined_folder, title, combined_results,
                                  combined=True, tshift=True, sn=True)
 
+    def list_catalogue(self):
+
+        dt = np.dtype([
+            ('Name', "S50"),
+            ("Lowercase Name", "S50"),
+            ("Alias", "S50"),
+            ("Host", "S50"),
+            ("Redshift", np.float),
+            ("RA", np.float),
+            ("Dec", np.float),
+            ("Disc Date", np.float),
+            ("Max Date", np.float),
+            ("NED RA", np.float),
+            ("NED Dec", np.float),
+            ("NED Redshift", np.float),
+            ("Max Apparent Magnitude", np.float),
+            ("Max Absolute Magnitude", np.float),
+            ("Max Luminosity", np.float)
+        ])
+
+        table = np.zeros(self.total_entries, dtype=dt)
+
+        self.data_dict = dict()
+
+        for i, name in enumerate(vars(self.TDEs)):
+            tde = getattr(self.TDEs, name)
+            table[i] = np.array([(
+                str(tde.name), str(tde.name).lower(),
+                str(tde.alias), str(tde.host),
+                tde.redshift_float,
+                tde.ra_deg, tde.dec_deg, tde.mjddisc, tde.mjdmax, tde.NED_ra,
+                tde.NED_dec, tde.NED_redshift, tde.app_mag_max,
+                tde.abs_mag_max, tde.lum
+            )], dtype=dt)
+
+            tde_dict = dict()
+            tde_dict["ra_deg"] = tde.ra_deg
+            tde_dict["dec_deg"] = tde.dec_deg
+            tde_dict["mjdmax"] = tde.mjdmax
+            tde_dict["mjddisc"] = tde.mjddisc
+            tde_dict["z"] = tde.redshift_float
+            tde_dict["season"] = []
+            self.data_dict[tde.name] = tde_dict
+
+        self.data_table = np.sort(
+            table, order=['Lowercase Name'], axis=0).view()
+
+        data_start = 54561.4746759
+
+        pre_emission_window = 365
+        post_emission_window = 100
+
+        emission_window = pre_emission_window + post_emission_window
+
+        mask = self.data_table["Max Date"] < (data_start - post_emission_window)
+
+        headers = ["Name",  "Host", "Redshift", "RA", "Dec",
+                   "Disc Date", "Max Date",
+                   "Max Apparent Magnitude", "Max Absolute Magnitude",
+                   ]
+
+        print "Of", len(self.data_table["Max Date"]), "entries, we remove",
+        print len(self.data_table["Max Date"][mask]), "events that occured",
+        print "more than", post_emission_window, "days before IC40 (",
+        print data_start,"), leaving",
+        print len(self.data_table["Max Date"][~mask]), "events."
+
+        print
+
+        print "Rejected: \n"
+
+        print tabulate(self.data_table[mask][headers], headers)
+
+        print
+
+        print "Accepted: \n"
+
+        print tabulate(self.data_table[~mask][headers], headers)
+
+        print
+
+        self.data_table = np.sort(
+            table, order=['Max Date'], axis=0).view()
+
+        if os.path.isfile(config_path):
+            conf.read(config_path)
+
+            for season in conf.sections():
+                print season, "\n"
+                start_time = float(conf.get(season, "start_mjd"))
+                end_time = float(conf.get(season, "end_mjd"))
+
+                print start_time, "to", end_time,
+
+                pre_mask = (
+                    (self.data_table["Max Date"] ) >
+                    start_time - post_emission_window)
+
+                post_mask = (
+                    (self.data_table["Max Date"] ) < \
+                    end_time + pre_emission_window)
+
+                mix_mask = np.logical_and(pre_mask, post_mask)
+
+                print "(", len(self.data_table[mix_mask]), ") entries \n"
+
+                print tabulate(self.data_table[mix_mask][headers], headers)
+
+                print
+
+                for tde in self.data_table[mix_mask]["Name"]:
+                    self.data_dict[tde]["season"].append(season)
+
+            # Does lightcurve peak close enough to the end of data, or after
+            # the end of data, meaning that emission extends beyond 7 year?
+
+            other_mask = (self.data_table["Max Date"]) < \
+                end_time - post_emission_window
+
+            print "Remaining Entries \n"
+
+            print "From", end_time, "onwards, or unknown date."
+
+            print tabulate(self.data_table[~other_mask][headers], headers)
+
+            print
+
+            for tde in self.data_table[~other_mask]["Name"]:
+                self.data_dict[tde]["season"].append("Later")
+
+    def export_catalogue_to_wikitext(self):
+        path = "wikitext.txt"
+        with open (path, "w") as f:
+
+            variables = ["Name",  "Redshift", "RA", "Dec", "Max Date"]
+
+            f.write("{| class ='wikitable sortable' border='1'|thumb| \n")
+            headers = "!"
+            for var in variables:
+                headers += " '''" + var + "'''||"
+
+            f.write(headers[:-2] + " \n")
+
+            for row in self.data_table[variables]:
+                f.write("|- \n")
+                new = "|"
+                for entry in row:
+                    new += "  " + str(entry) + "  ||"
+
+                # print row, new
+                f.write(new[:-2] + " \n")
+
+            f.write("|}")
+
     def list_best(self):
         """Lists the TDE candidates which are most promising. The criteria
         for this are set in the IsBest() function for the TDE class.
@@ -230,11 +403,11 @@ class FullSet:
         'variables' list.
         """
         variables = ["redshift", "comovingdist", "lumdist", "hostoffsetdist",
-                     "mjdmax", "nbands", "maxabsmag", "ra_float",
+                     "mjddisc", "nbands", "maxabsmag", "ra_float",
                      "dec_float", "ebv"]
 
         titles = ["Redshift", "Comoving Distance", "Luminosity Distance",
-                  "Host Offset Distance", "Date of Max Luminosity",
+                  "Host Offset Distance", "Date of Discovery",
                   "Number of observational bands", "Max Absolute Magnitude",
                   "Right ascension", "Declination", "EBV"]
 
@@ -257,7 +430,9 @@ class FullSet:
                     val = getattr(tde, var)
                     if not isinstance(val, float):
                         val = getattr(tde, var).value
-                    values[i].append(float(val))
+
+                    if not np.isnan(float(val)):
+                        values[i].append(float(val))
 
         print "Plotting histograms for the following:", titles
         p.histograms_plot(titles, x_labels, values, suffix=suffix)
@@ -542,6 +717,7 @@ class TDE_Candidate:
     """A TDE Candidate from the catalogue
     """
     def __init__(self, jsonfile):
+        self.raw = jsonfile[0]
         self.name = jsonfile[0]["name"]
         self.has_photometry = False
         self.has_spectra = False
@@ -550,9 +726,38 @@ class TDE_Candidate:
         self.type = "TDE"
         self.best = False
         self.fits = dict()
+
+        self.alias = []
+
+        self.mjddisc = np.nan
+        self.mjdmax = np.nan
+        self.ra_deg = np.nan
+        self.dec_deg = np.nan
+        self.redshift_float = np.nan
+        self.app_mag_max = np.nan
+        self.abs_mag_max = np.nan
+        self.lum = np.nan
+
+        self.NED_ra = np.nan
+        self.NED_dec = np.nan
+        self.NED_redshift = np.nan
+        self.NED_name = np.nan
+
         for key, val in jsonfile[0].items():
-            if key != "photometry":
+
+            if key == "alias":
+                for entry in val:
+                    self.alias.append(str(entry["value"]))
+
+            elif key == "host":
+                pass
+
+            elif key != "photometry":
                 if isinstance(val, list):
+
+                    # if len(val) > 1:
+                    #     print self.name, key
+
                     con = container()
                     for key2, val2 in val[0].items():
                         setattr(con, key2, val2)
@@ -570,11 +775,196 @@ class TDE_Candidate:
                 self.ra = self.hostra
                 self.dec = self.hostdec
 
+        self.coordinates()
+
+        accept = False
+
+        to_check = list(self.alias)
+
+        if "host" in jsonfile[0].keys():
+            val = jsonfile[0]["host"]
+            for host in val:
+                to_check.append(host["value"])
+
+        hosts = []
+        NED_hosts = []
+        for name in to_check:
+            entry = check_name(name)
+            if entry is not None:
+                if len(entry["data_table"][entry["mask"]]) > 0:
+                    NED_hosts.append(entry)
+                    hosts.append(entry["data_table"][entry["mask"]][
+                                     "Object Name"])
+                # else:
+                #     print entry["data_table"]
+                    # raw_input("prompt")
+
+        if len(NED_hosts) == 1:
+
+            NED_galaxy = NED_hosts[0]["data_table"][0]
+            hosts = str(list(hosts[0])[0])
+
+        elif len(NED_hosts) == 0:
+
+            entry = check_coordinate(self.ra_deg, self.dec_deg)
+
+            if entry is not None:
+                candidate = entry["data_table"][entry["mask"]][0]
+
+                new_name = string.replace(candidate["Object Name"],
+                                          " ", "")
+
+                try:
+
+                    potential_hosts = [
+                        string.replace(x["value"], " ", "") for x in val]
+
+                    alt = string.replace(new_name, "GALEXASC", "GALEX")
+                    # print self.name, self.alias, potential_hosts, alt
+                    #
+                    # print self.name, self.alias, potential_hosts, new_name
+
+                    if new_name in potential_hosts:
+                        hosts = str(val[potential_hosts.index(new_name)]["value"])
+                        accept = True
+
+                    elif alt in potential_hosts:
+                        accept = True
+                        hosts = str(val[potential_hosts.index(alt)]["value"])
+
+                    if accept:
+                        print "Match!"
+                        NED_galaxy = candidate
+
+                except KeyError:
+                    pass
+        else:
+
+            identical = True
+
+            for host in NED_hosts:
+                name = str(host["data_table"]["Object Name"])
+                for alt_host in NED_hosts:
+                    alt_name = str(alt_host["data_table"]["Object Name"])
+                    if name != alt_name:
+                        identical = False
+
+
+            if identical:
+                NED_galaxy = NED_hosts[0]["data_table"][0]
+                print hosts,
+                hosts = str(list(hosts[0])[0])
+                print hosts
+
+            else:
+                raise Exception("Found too many hosts!")
+
+        # else:
+        #     print "No host or", self.name
+        #     for name in self.alias:
+        #         entry = check_name(name)
+        #         if entry is not None:
+        #             print entry["data_table"]
+        #
+        #     print self.name, self.alias
+        try:
+            self.NED_name = str(NED_galaxy["Object Name"])
+            self.NED_ra = float(NED_galaxy["RA(deg)"])
+            self.NED_dec = float(NED_galaxy["DEC(deg)"])
+            self.NED_redshift = float(NED_galaxy["Redshift"])
+
+            self.host = hosts
+
+
+        except UnboundLocalError:
+            self.host = np.nan
+
+        if hasattr(self, "redshift"):
+            self.redshift_float = self.redshift.value
+
+        if hasattr(self, "maxappmag"):
+            self.app_mag_max = self.maxappmag.value
+
+        if hasattr(self, "maxabsmag"):
+            self.abs_mag_max = self.maxabsmag.value
+
         self.swiftdata()
         self.spectrum()
-        self.coordinates()
+
         self.mjd_time()
         self.is_best()
+
+    def add_ned(self):
+        best = None
+
+        if hasattr(self, "host"):
+            print self.name, self.host.value, vars(self.host)
+
+            # entry = check_name(str(self.host.value))
+            # if entry is not None:
+            #     best = entry["data_table"]
+            #     # if best is None:
+            #     #
+            #     # else:
+            #     #     if best["Object Name"] == \
+            #     #             entry["data_table"]["Object Name"]:
+            #     #         pass
+            #     #     else:
+            #     #         pass
+            #             # print self.alias
+            #             # print best
+            #             # print entry["data_table"]
+            #             # raise Exception("Conflict with aliases. Each matches "
+            #             #                 "to a different object!")
+            #
+            #     if len(best) > 1:
+            #         raise Exception("Too many entries")
+
+
+
+        # entry = check_coordinate(self.ra.deg, self.dec.deg)
+        # if entry is not None:
+        #     try:
+        #         best = entry["data_table"][entry["mask"]][0]
+        #         # if best is not None:
+        #         #     if best["Object Name"] != new["Object Name"]:
+        #         #         name_mask = entry["data_table"]["Object Name"] == \
+        #         #                     best["Object Name"]
+        #         #
+        #         #         alt = entry["data_table"][name_mask]
+        #         #
+        #         #         if len(alt) == 1:
+        #         #             best = alt
+        #         #         else:
+        #         #             check =[
+        #         #             x for x in entry["data_table"]["Object Name"]
+        #         #             if any(y.replace(" ", "") in x.replace(" ", "")
+        #         #             for y in self.alias)]
+        #         #
+        #         #             if len(check) > 0:
+        #         #
+        #         #                 best = entry["data_table"][
+        #         #                     entry["data_table"]["Object Name"] ==
+        #         #                     check[0]]
+        #         #             else:
+        #         #                 best = new
+        #         #     else:
+        #         #         best = new
+        #         # else:
+        #         #     best = new
+        #     except IndexError:
+        #         pass
+
+        if best is not None:
+            self.alias.append(best["Object Name"])
+            self.NED_name = str(best["Object Name"])
+            self.NED_ra = float(best["RA(deg)"])
+            self.NED_dec = float(best["DEC(deg)"])
+            self.NED_redshift = float(best["Redshift"])
+            self.NED_coords = SkyCoord(
+                str(self.NED_ra) + " " + str(self.NED_dec),
+                unit=(u.deg, u.deg))
+            self.NED_offset = self.NED_coords.separation(self.coords).arcsec
 
     def swiftdata(self):
         """Reads datasets downloaded from SWIFT in the 0.3-10KeV range,

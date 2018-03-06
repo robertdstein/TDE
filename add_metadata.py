@@ -4,8 +4,8 @@ import os
 import re
 
 
-def run(zip_file_name="/afs/ifh.de/user/s/steinrob/Desktop/python/TDE/tde_cat"
-                      ".zip"):
+def run(zip_file_name="/afs/ifh.de/user/s/steinrob/scratch/TDE_output/tde_cat"
+        ".zip", source_dir = "/afs/ifh.de/user/s/steinrob/Desltop/python/TDE"):
     """Function to modify the ZIP file downloaded from the Open TDE
     catalogue. It incorporates additional metadata stored in the same
     directory, under the name metadata.json
@@ -20,7 +20,7 @@ def run(zip_file_name="/afs/ifh.de/user/s/steinrob/Desktop/python/TDE/tde_cat"
     # Finds root of catalogue, giving metadata path
     root = "/" .join(zip_file_name.split("/")[:-1]) + "/"
 
-    metadata_path = root + "metadata.json"
+    metadata_path = source_dir + "metadata.json"
     print "Loading additional metadata in", metadata_path
 
     # Opens both old and new zip files concurrently
@@ -74,9 +74,13 @@ def run(zip_file_name="/afs/ifh.de/user/s/steinrob/Desktop/python/TDE/tde_cat"
                                     print key,
                                     d[name][key] = new_data[key]
 
-                                elif key == "sources":
+                                elif key in ["sources", "alias"]:
                                     added = [x for x in new_data[key]]
                                     d[name][key].extend(added)
+
+                                else:
+                                    print "OVERWRITING:", key,
+                                    d[name][key] = new_data[key]
 
                             print ""
 

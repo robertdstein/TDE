@@ -137,6 +137,15 @@ def agrr_unknown_dict():
     return agrr_dict
 
 
+def jetted_dict():
+    jet_dict = dict()
+    jet_dict["names"] = ["Swift J1644+57",
+                         "Swift J2058+05",
+                         "Swift J1112-82",
+                         ]
+    return jet_dict
+
+
 def agrr_xray_likely_and_veiled_dict():
     agrr_dict = copy.deepcopy(agrr_xray_dict())
     likely = agrr_likely_xray_dict()
@@ -170,6 +179,7 @@ def return_all_catalogues():
     all_catalogues["agrr_possible"] = agrr_possible_xray_dict()
     all_catalogues["agrr_veiled"] = agrr_veiled_dict()
     all_catalogues["agrr_unknown"] = agrr_unknown_dict()
+    all_catalogues["jetted"] = jetted_dict()
     return all_catalogues
 
 
@@ -179,4 +189,5 @@ def catalogues_to_export():
     export_catalogues["Dai_Fang_TDE"] = dai_and_fang_dict()
     export_catalogues["AGRR_TDE"] = agrr_xray_likely_and_veiled_dict()
     export_catalogues["AGRR_Xray_TDE"] = agrr_xray_dict()
+    export_catalogues["Jetted_TDE"] = jetted_dict()
     return export_catalogues

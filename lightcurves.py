@@ -75,7 +75,6 @@ def default(maximum_luminosity=30):
     """
     return [maximum_luminosity, 5 * 10 ** -3, 20, -2., 0.0]
 
-
 def logpeak(x, p=default()):
     """Returns a value for the peak part of the lightcurve, which is a
     Gaussian that in logspace becomes a quadratic function
