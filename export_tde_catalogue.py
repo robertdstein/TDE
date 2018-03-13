@@ -11,6 +11,15 @@ root = core + "/Input/Catalogues/"
 
 sourcepath = "/afs/ifh.de/user/s/steinrob/Desktop/python/The-Flux-Evaluator/"
 
+pre_window = 365
+post_window = 100
+length = pre_window + post_window
+
+sim_length = 10
+
+spectral_indices = [1.8, 2.0, 2.5, 3.0]
+spectral_indices = [1.8, 2.0]
+
 
 def run(data):
     """Creates a catalogue based on the TDE dataset, for use in stacking
@@ -112,16 +121,22 @@ def run(data):
 
     config = ConfigParser.ConfigParser()
 
-    pre_window = 365
-    post_window = 100
-    length = pre_window + post_window
-
     if not os.path.isdir(single_source_dir):
         os.makedirs(single_source_dir)
 
     for name, tde_dict in data.data_dict.iteritems():
-        seasons = [x for x in tde_dict["season"] if x != "Later"]
-        if len(seasons) > 0:
+
+        veto = ["Earlier", "Later"]
+
+        hits = [x for x in tde_dict["season"] if x in veto]
+        seasons = tde_dict["season"]
+
+        if len(hits) > 0:
+            pass
+        elif len(seasons) == 0:
+            pass
+        else:
+            seasons = tde_dict["season"]
             print name, tde_dict
 
             combo_name = "+".join(seasons) + ".ini"
@@ -142,50 +157,53 @@ def run(data):
 
             np.save(cat_path, new_catalogue)
 
-            section_name = "Individual_TDEs/" + \
-                           "".join([x for x in name if x != " "]) + "/"
+            for gamma in spectral_indices:
 
-            config.add_section(section_name)
-            config.set(section_name, "UseEnergy", True)
-            config.set(section_name, "FitGamma", True)
-            config.set(section_name, "FixedGamma", 2)
-            config.set(section_name, "UseTime", True)
-            config.set(section_name, "SimTimeModel", "Box")
-            config.set(section_name, "SimTimeParameters",
-                       {"t0": -pre_window, "length": length})
-            config.set(section_name, "ReconTimeModel", "Box")
-            config.set(section_name, "ReconTimeParameters",
-                       {"t0": -pre_window, "length": length})
-            config.set(section_name, "FitWeights", False)
-            config.set(section_name, "UseBox", False)
-            config.set(section_name, "CatName", cat_path)
-            config.set(section_name, "DataConfig", combo_name)
+                section_name = "Individual_TDEs/" + \
+                               "".join([x for x in name if x != " "]) + \
+                               "_gamma=" + str(gamma) + "/"
 
-            sens_save_path = core + "/Output/PS_k_Sensitivities/" + \
-                seasons[0] + ".npy"
+                config.add_section(section_name)
+                config.set(section_name, "UseEnergy", True)
+                config.set(section_name, "FitGamma", True)
+                config.set(section_name, "FixedGamma", gamma)
+                config.set(section_name, "UseTime", True)
+                config.set(section_name, "SimTimeModel", "Box")
+                config.set(section_name, "SimTimeParameters",
+                           {"t0": -pre_window, "length": sim_length})
+                config.set(section_name, "ReconTimeModel", "Box")
+                config.set(section_name, "ReconTimeParameters",
+                           {"t0": -pre_window, "length": length})
+                config.set(section_name, "FitWeights", False)
+                config.set(section_name, "UseBox", False)
+                config.set(section_name, "CatName", cat_path)
+                config.set(section_name, "DataConfig", combo_name)
 
-            data = np.load(sens_save_path)[0].T
+                sens_save_path = core + "/Output/PS_k_Sensitivities/" + \
+                    seasons[0] + ".npy"
 
-            f = interp1d(data[0], data[1])
-            sens = 2 * f(np.sin(np.deg2rad(tde_dict["dec_deg"])))
+                data = np.load(sens_save_path)[0].T
 
-            start_window = maxtime - pre_window
+                f = interp1d(data[0], data[1])
+                sens = 50 * f(np.sin(np.deg2rad(tde_dict["dec_deg"])))
 
-            end_window = maxtime + post_window
+                start_window = maxtime - pre_window
 
-            if start_window < datastart:
-                delta = datastart - start_window
-                frac = (length - delta)/length
+                end_window = maxtime + post_window
 
-                sens *= 1/frac
+                if start_window < datastart:
+                    delta = datastart - start_window
+                    frac = (length - delta)/length
 
-            elif end_window > dataend:
-                delta = end_window - dataend
-                frac = (length - delta)/length
+                    sens *= 1/frac
 
-                sens *= 1/frac
+                elif end_window > dataend:
+                    delta = end_window - dataend
+                    frac = (length - delta)/length
 
-            config.set(section_name, "MaxK", sens)
+                    sens *= 1/frac
+
+                config.set(section_name, "MaxK", sens)
 
     analysis_path = sourcepath + "analysis_config/individual_TDEs.ini"
 

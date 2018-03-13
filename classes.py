@@ -65,6 +65,7 @@ class FullSet:
         self.creation_time = datetime.datetime.now()
         self.data_table = np.nan
         self.data_dict = np.nan
+        self.neutrino_table = np.nan
         self.list_catalogue()
         self.export_catalogue_to_wikitext()
 
@@ -301,6 +302,23 @@ class FullSet:
 
         if os.path.isfile(config_path):
             conf.read(config_path)
+
+            data_start = float(conf.get("IC40", "start_mjd"))
+
+            pre_mask = (
+                (self.data_table["Max Date"]) <
+                data_start + pre_emission_window)
+
+            for tde in self.data_table[pre_mask]["Name"]:
+                self.data_dict[tde]["season"].append("Earlier")
+
+            print "Early Entries \n"
+
+            print "Before", data_start, "onwards, or unknown date."
+
+            print "(", len(self.data_table[pre_mask]), ") entries \n"
+
+            print tabulate(self.data_table[pre_mask][headers], headers)
 
             for season in conf.sections():
                 print season, "\n"

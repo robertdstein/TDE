@@ -4,7 +4,7 @@ import import_data as i
 import add_metadata as md
 from classes import FullSet
 from sklearn.externals import joblib
-import export_tde_catalogue
+import export_tde_catalogue, neutrino_astronomy
 
 parser = argparse.ArgumentParser(description='Select modues to run')
 parser.add_argument("-u", "--update", action="store_true")
@@ -14,6 +14,7 @@ parser.add_argument("-c", "--candidate", nargs='?', const="OGLE16aaa", type=str)
 parser.add_argument("-p", "--plot", action="store_true")
 parser.add_argument("-sn", "--supernova", action="store_true")
 parser.add_argument("-e", "--export", action="store_true")
+parser.add_argument("-n", "--neutrino", action="store_true")
 
 cfg = parser.parse_args()
 
@@ -66,3 +67,6 @@ if cfg.plot:
 
 if cfg.export:
     export_tde_catalogue.run(dataset)
+
+if cfg.neutrino:
+    neutrino_astronomy.run(dataset)
