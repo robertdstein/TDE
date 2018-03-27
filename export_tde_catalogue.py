@@ -18,7 +18,6 @@ length = pre_window + post_window
 sim_length = 10
 
 spectral_indices = [1.8, 2.0, 2.5, 3.0]
-spectral_indices = [1.8, 2.0]
 
 
 def run(data):
@@ -167,6 +166,7 @@ def run(data):
                 config.set(section_name, "UseEnergy", True)
                 config.set(section_name, "FitGamma", True)
                 config.set(section_name, "FixedGamma", gamma)
+                config.set(section_name, "InjectionGamma", gamma)
                 config.set(section_name, "UseTime", True)
                 config.set(section_name, "SimTimeModel", "Box")
                 config.set(section_name, "SimTimeParameters",
@@ -185,7 +185,7 @@ def run(data):
                 data = np.load(sens_save_path)[0].T
 
                 f = interp1d(data[0], data[1])
-                sens = 50 * f(np.sin(np.deg2rad(tde_dict["dec_deg"])))
+                sens = 100 * f(np.sin(np.deg2rad(tde_dict["dec_deg"])))
 
                 start_window = maxtime - pre_window
 
@@ -202,6 +202,8 @@ def run(data):
                     frac = (length - delta)/length
 
                     sens *= 1/frac
+
+                sens *= 12 ** ((gamma - 2.0)/0.25)
 
                 config.set(section_name, "MaxK", sens)
 
