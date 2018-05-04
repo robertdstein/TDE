@@ -165,29 +165,6 @@
         ]
     },
 
-    "DES14C1kia":{
-
-        "maxdate":[
-            {
-                "value": "2014/12/30",
-                "source": "NEW1",
-                "derived": true
-            }
-        ],
-        "discoverdate":[
-            {
-                "value": "2014/11/11",
-                "source": "NEW1"
-            }
-        ],
-        "sources": [
-            {
-                "alias": "NEW1",
-                "reference": "http://www.astronomerstelegram.org/?read=6877"
-            }
-        ]
-    },
-
     "LEDA 095953":{
 
         "alias":[
@@ -645,6 +622,79 @@
         "class":[
             {
                 "value": "silver",
+                "source": 3
+            }
+        ]
+   },
+
+   "DES14C1kia": {
+        "lastupperlim": [
+            {
+                "value": "2014/11/11",
+                "source": 8
+            }
+        ],
+        "class":[
+            {
+                "value": "silver",
+                "source": 8
+            }
+        ],
+        "maxdate":[
+            {
+                "value": "2014/12/30",
+                "source": "NEW1",
+                "derived": true
+            }
+        ],
+        "discoverdate":[
+            {
+                "value": "2014/11/11",
+                "source": "NEW1"
+            }
+        ],
+        "sources": [
+            {
+                "alias": "NEW1",
+                "reference": "http://www.astronomerstelegram.org/?read=6877"
+            }
+        ]
+   },
+
+   "Dougie": {
+        "lastupperlim": [
+            {
+                "value": "2009/01/21",
+                "source": 3
+            }
+        ],
+        "class":[
+            {
+                "value": "silver",
+                "source": 3
+            }
+        ]
+   },
+
+   "F01004-2237": {
+        "lastupperlim": [
+            {
+                "value": "2010/01/23",
+                "source": 1
+            }
+        ],
+        "class":[
+            {
+                "value": "silver",
+                "source": 1
+            }
+        ]
+   },
+
+   "IGR J17361–4441": {
+        "class":[
+            {
+                "value": "blacklist",
                 "source": 3
             }
         ]
