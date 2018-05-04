@@ -24,10 +24,9 @@ def run(data):
     fields = ["Redshift", "RA", "Dec", "Max Date"]
 
     # gamma = 2.0
-    Emax = 10 * u.PeV
-    Emin = 100 * u.GeV
-    # Emax = 10 * u.PeV / (100 * u.TeV)
-    # Emin = 100 * u.GeV / (100 * u.TeV)
+    Emax = (10 * u.PeV).to(u.GeV)
+    Emin = (100 * u.GeV).to(u.GeV)
+    E0 = 1 * u.GeV
 
     f_pi = 0.1
     waxmann_bachall = (3./8.) * f_pi
@@ -49,8 +48,8 @@ def run(data):
         "Average Neutrino Luminosity"
         ]
 
-    extra = [(x + " (gamma=" + str(y) + ")", np.float) for y
-             in spectral_indices for x in specific]
+    extra = [(x + " (" + str(y) + ")", np.float) for y
+             in sorted(sens_dict.itervalues().next().keys()) for x in specific]
 
     full = shared + extra
 
@@ -76,8 +75,9 @@ def run(data):
                 new_row[0] = new_name
 
             for gammakey in sorted(sens_dict[name].keys()):
-
                 gamma = float(gammakey.split("=")[1])
+
+                print gamma
 
                 entry = sens_dict[name][gammakey]
 
@@ -87,18 +87,10 @@ def run(data):
                 z = row["Redshift"]
 
                 entry["Sensitivity"] = sens = (
-                    (entry["analytic"] * (u.TeV ** (gamma-1))) /
-                    (u.second * u.cm ** 2)) * (10 ** -12)
-                #
-                # entry["Sensitivity"] = sens = (
-                #     (entry["analytic"] * (
-                #         1. / (u.TeV * u.second * u.cm ** 2)) * (10 ** -12)))
+                    (entry["analytic"] * (10 ** -9)) * (
+                    1. / (u. GeV * u.second * u.cm ** 2)))
 
-                # raw_input("prompt")
-
-                # print name, sens,
-
-                model_length = 10 ** 5 * u.second
+                # model_length = 10 ** 5 * u.second
                 window_length = sim_length * (60 * 60 * 24) * u.second
 
                 entry["Time Integrated Sensitivity"] = window_sens = (
@@ -112,11 +104,14 @@ def run(data):
                     4 * math.pi * (lumdist.to(u.cm)) ** 2)
 
                 phi_power = 1 - gamma
-                phi_integral = (1 / phi_power) * (
-                    (Emax ** phi_power) - (Emin ** phi_power))
-
                 # phi_integral = (1 / phi_power) * (
-                #     (Emax ** phi_power) - (Emin ** phi_power)) * u.TeV
+                #     (Emax ** phi_power) - (Emin ** phi_power))
+                #
+                # phi_integral = (1 / phi_power) * (
+                #     (Emax ** phi_power) - (Emin ** phi_power)) * u.GeV
+
+                phi_integral = ((1./phi_power) * (E0 ** gamma) * (
+                    (Emax ** phi_power) - (Emin ** phi_power))).value * u.GeV
 
                 entry["Integrated Sensitivity"] = dNdA = \
                     (window_sens * phi_integral).to(u.cm**-2)
@@ -125,20 +120,36 @@ def run(data):
 
                 if gamma == 2:
                     e_integral = np.log10(Emax / Emin)
-                    # e_integral = np.log10(Emax / Emin) * (u.TeV ** 2)
+                    e_integral = np.log10(Emax / Emin) * (u.GeV ** 2)
                 else:
                     power = 2 - gamma
-                    e_integral = ((Emax ** power) - (Emin ** power))/power
-                    # e_integral = (u.TeV ** 2) * ((Emax ** power) - (
-                    #     Emin ** power))/power
+
+                    print (1./power) * (E0 ** gamma)
+                    print (Emax ** power) - (Emin ** power)
+
+                    print ((1./power) * (E0 ** gamma) * (
+                            (Emax ** power) - (Emin ** power)))
+
+                    # Get around astropy power rounding error (does not give
+                    # EXACTLY 2)
+
+                    e_integral = ((1./power) * (E0 ** gamma) * (
+                            (Emax ** power) - (Emin ** power))
+                                  ).value * u.GeV**2
+
 
                 entry["Neutrino Energy"] = etot = (
                     window_sens * area * e_integral).to(u.erg)
+
+                print gamma, sens, window_sens, dNdA, etot,
 
                 # print window_sens, e_integral, etot, phi_power
                 # raw_input("prompt")
 
                 entry["pretty Neutrino Energy"] = etot/(u.erg)
+                print entry["pretty Neutrino Energy"]
+
+                raw_input("prompt")
 
                 entry["CR Energy"] = etot / waxmann_bachall
 
@@ -151,10 +162,10 @@ def run(data):
             table[i] = np.array([tuple(new_row)], dtype=dt)
             i += 1
 
-    table = table[table['Time Integrated Sensitivity (gamma=2.0)'] > 0]
+    # table = table[table['Time Integrated Sensitivity (gamma=2.0)'] > 0]
 
-    for y in spectral_indices:
-        key = "(gamma=" + str(y) + ")"
+    for y in sorted(sens_dict.itervalues().next().keys()):
+        key = "(" + str(y) + ")"
 
         to_print = ["Name", "Dec", "Time Integrated Sensitivity " + key,
                     "pretty Neutrino Energy " + key]

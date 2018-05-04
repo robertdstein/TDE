@@ -228,6 +228,9 @@ class FullSet:
             ("Dec", np.float),
             ("Disc Date", np.float),
             ("Max Date", np.float),
+            ("Last Upper Limit", np.float),
+            ("Window Start Date", np.float),
+            ("Window End Date", np.float),
             ("NED RA", np.float),
             ("NED Dec", np.float),
             ("NED Redshift", np.float),
@@ -240,15 +243,31 @@ class FullSet:
 
         self.data_dict = dict()
 
+        data_start = 54561.4746759
+
+        pre_emission_window = 365
+        post_emission_window = 100
+
         for i, name in enumerate(vars(self.TDEs)):
             tde = getattr(self.TDEs, name)
+
+            if not np.isnan(tde.lastul):
+                window_start = float(tde.lastul)
+
+            else:
+                window_start = tde.mjdmax - pre_emission_window
+
+            if True:
+                window_end = tde.mjdmax + post_emission_window
+
             table[i] = np.array([(
                 str(tde.name), str(tde.name).lower(),
                 str(tde.alias), str(tde.host),
                 tde.redshift_float,
-                tde.ra_deg, tde.dec_deg, tde.mjddisc, tde.mjdmax, tde.NED_ra,
-                tde.NED_dec, tde.NED_redshift, tde.app_mag_max,
-                tde.abs_mag_max, tde.lum
+                tde.ra_deg, tde.dec_deg, tde.mjddisc, tde.mjdmax, tde.lastul,
+                window_start, window_end, tde.NED_ra, tde.NED_dec,
+                tde.NED_redshift,
+                tde.app_mag_max, tde.abs_mag_max,  tde.lum
             )], dtype=dt)
 
             tde_dict = dict()
@@ -256,6 +275,9 @@ class FullSet:
             tde_dict["dec_deg"] = tde.dec_deg
             tde_dict["mjdmax"] = tde.mjdmax
             tde_dict["mjddisc"] = tde.mjddisc
+            tde_dict["lastul"] = tde.lastul
+            tde_dict["start"] = window_start
+            tde_dict["end"] = window_end
             tde_dict["z"] = tde.redshift_float
             tde_dict["season"] = []
             self.data_dict[tde.name] = tde_dict
@@ -263,25 +285,20 @@ class FullSet:
         self.data_table = np.sort(
             table, order=['Lowercase Name'], axis=0).view()
 
-        data_start = 54561.4746759
-
-        pre_emission_window = 365
-        post_emission_window = 100
-
         emission_window = pre_emission_window + post_emission_window
 
-        mask = self.data_table["Max Date"] < (data_start - post_emission_window)
+        mask = self.data_table["Window End Date"] < data_start
 
         headers = ["Name",  "Host", "Redshift", "RA", "Dec",
-                   "Disc Date", "Max Date",
-                   "Max Apparent Magnitude", "Max Absolute Magnitude",
+                   "Disc Date", "Max Date", "Last Upper Limit",
+                   "Window Start Date", "Window End Date"
                    ]
 
         print "Of", len(self.data_table["Max Date"]), "entries, we remove",
-        print len(self.data_table["Max Date"][mask]), "events that occured",
-        print "more than", post_emission_window, "days before IC40 (",
-        print data_start,"), leaving",
-        print len(self.data_table["Max Date"][~mask]), "events."
+        print len(self.data_table['Window Start Date'][mask]),
+        print "events that finished before IC40 (",
+        print data_start, "), leaving",
+        print len(self.data_table['Window Start Date'][~mask]), "events."
 
         print
 
@@ -298,16 +315,14 @@ class FullSet:
         print
 
         self.data_table = np.sort(
-            table, order=['Max Date'], axis=0).view()
+            table, order=['Window Start Date'], axis=0).view()
 
         if os.path.isfile(config_path):
             conf.read(config_path)
 
             data_start = float(conf.get("IC40", "start_mjd"))
 
-            pre_mask = (
-                (self.data_table["Max Date"]) <
-                data_start + pre_emission_window)
+            pre_mask = self.data_table["Window Start Date"] < data_start
 
             for tde in self.data_table[pre_mask]["Name"]:
                 self.data_dict[tde]["season"].append("Earlier")
@@ -327,13 +342,9 @@ class FullSet:
 
                 print start_time, "to", end_time,
 
-                pre_mask = (
-                    (self.data_table["Max Date"] ) >
-                    start_time - post_emission_window)
+                pre_mask = self.data_table["Window Start Date"] < end_time
 
-                post_mask = (
-                    (self.data_table["Max Date"] ) < \
-                    end_time + pre_emission_window)
+                post_mask = self.data_table["Window End Date"] > start_time
 
                 mix_mask = np.logical_and(pre_mask, post_mask)
 
@@ -349,8 +360,7 @@ class FullSet:
             # Does lightcurve peak close enough to the end of data, or after
             # the end of data, meaning that emission extends beyond 7 year?
 
-            other_mask = (self.data_table["Max Date"]) < \
-                end_time - post_emission_window
+            other_mask = (self.data_table["Window End Date"]) < end_time
 
             print "Remaining Entries \n"
 
@@ -749,6 +759,7 @@ class TDE_Candidate:
 
         self.mjddisc = np.nan
         self.mjdmax = np.nan
+        self.lastul = np.nan
         self.ra_deg = np.nan
         self.dec_deg = np.nan
         self.redshift_float = np.nan
@@ -1049,6 +1060,12 @@ class TDE_Candidate:
             maxdate = y + "-" + m + "-" + d + "T00:00:00"
             t = Time(maxdate)
             setattr(self, "mjdvismax", float(t.mjd))
+
+        if hasattr(self, "lastupperlim"):
+            [y, m, d] = self.lastupperlim.value.split("/")
+            uldate = y + "-" + m + "-" + d + "T00:00:00"
+            t = Time(uldate)
+            setattr(self, "lastul", float(t.mjd))
 
     def group_photometry(self, val):
         """Extracts the photometry data from the json file, and groups it

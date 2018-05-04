@@ -1,0 +1,8 @@
+\documentclass[]{article} 
+\begin{document}
+\begin{tabular}{ |p{3cm}||p{3cm}|p{3cm}|}
+\hline 
+\multicolumn{3}{|c|}{Assumed Neutrino Spectrum $ \frac {d \phi}{dE} \propto E ^ {-2} $} \\ 
+\hline 
+\end{tabular} 
+\end{document} 

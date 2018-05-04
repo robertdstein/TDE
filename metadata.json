@@ -1,4 +1,734 @@
 {
+
+
+    "2XMMi J1847":{
+        "discoverdate":[
+            {
+                "value": "2006/09/06",
+                "source": "NEW1"
+            }
+      ],
+      "maxdate":[
+            {
+                "value": "2007/04/16",
+                "source": "NEW1"
+            }
+      ],
+      "sources": [
+            {
+                "alias": "NEW1",
+                "reference": "https://arxiv.org/abs/1711.04795"
+            }
+      ]
+    },
+
+    "PS1-10adi":{
+        "maxdate": [
+            {
+                "value": "2010/09/03",
+                "source": "NEW1"
+            }
+        ],
+        "discoverdate": [
+            {
+                "value": "2010/08/15",
+                "source": "NEW1"
+
+            }
+        ],
+        "host": [
+            {
+                "value": "SDSS J204244.74+153032.1",
+                "source": "NEW1"
+            }
+        ],
+
+        "maxabsmag": [
+            {
+                "value": "-19.7",
+                "source": "NEW1"
+            }
+        ],
+        "sources": [
+          {
+              "alias": "NEW1",
+              "reference": "https://arxiv.org/pdf/1711.04577.pdf"
+          }
+        ]
+    },
+
+    "PS1-13jw":{
+        "maxdate": [
+            {
+                "value": "2013/05/22",
+                "source": "NEW1"
+            }
+        ],
+        "host": [
+            {
+                "value": "SDSS J084453.56+425744.8",
+                "source": "NEW1"
+            }
+        ],
+        "maxabsmag": [
+            {
+                "value": "-22.2",
+                "source": "NEW1"
+            }
+        ],
+        "sources": [
+            {
+                "alias": "NEW1",
+                "reference": "https://arxiv.org/pdf/1711.04577.pdf"
+            }
+        ]
+    },
+
+    "J094806":{
+        "maxdate": [
+            {
+                "value": "2009/05/28",
+                "source": "NEW1"
+            }
+        ],
+        "host": [
+            {
+                "value": "SDSS J094806.55+031801.9",
+                "source": "NEW1"
+            }
+        ],
+        "maxabsmag": [
+            {
+                "value": "-21.5",
+                "source": "NEW1"
+            }
+        ],
+        "sources": [
+            {
+                "alias": "NEW1",
+                "reference": "https://arxiv.org/pdf/1711.04577.pdf"
+            }
+        ]
+    },
+
+    "J094608":{
+        "maxdate": [
+            {
+                "value": "2011/06/22",
+                "source": "NEW1"
+            }
+        ],
+        "host": [
+            {
+                "value": "SDSS J094608.49+351222.4",
+                "source": "NEW1"
+            }
+        ],
+        "maxabsmag": [
+            {
+                "value": "-20.7",
+                "source": "NEW1"
+            }
+        ],
+        "sources": [
+            {
+                "alias": "NEW1",
+                "reference": "https://arxiv.org/pdf/1711.04577.pdf"
+            }
+        ]
+    },
+
+    "J233454":{
+        "maxdate": [
+            {
+                "value": "2010/01/23",
+                "source": "NEW1"
+            }
+        ],
+        "host": [
+            {
+                "value": "SDSS J233454.07+145712.8",
+                "source": "NEW1"
+            }
+        ],
+        "maxabsmag": [
+            {
+                "value": "-20.5",
+                "source": "NEW1"
+            }
+        ],
+        "sources": [
+            {
+                "alias": "NEW1",
+                "reference": "https://arxiv.org/pdf/1711.04577.pdf"
+            }
+        ]
+    },
+
+    "DES14C1kia":{
+
+        "maxdate":[
+            {
+                "value": "2014/12/30",
+                "source": "NEW1",
+                "derived": true
+            }
+        ],
+        "discoverdate":[
+            {
+                "value": "2014/11/11",
+                "source": "NEW1"
+            }
+        ],
+        "sources": [
+            {
+                "alias": "NEW1",
+                "reference": "http://www.astronomerstelegram.org/?read=6877"
+            }
+        ]
+    },
+
+    "LEDA 095953":{
+
+        "alias":[
+            {
+                "value": "TDXFJ134730.3-325451",
+                "source": "NEW1"
+            }
+        ],
+        "discoverdate": [
+            {
+                "value": "1994/08/05",
+                "source": "NEW1"
+            }
+        ],
+        "maxdate": [
+            {
+                "value": "1994/08/05",
+                "source": "NEW1"
+            }
+        ],
+        "sources": [
+            {
+                "alias": "NEW1",
+                "reference": "https://arxiv.org/pdf/0901.3357.pdf"
+            }
+        ]
+    },
+
+    "PTF10nuj":{
+
+        "discoverdate": [
+            {
+                "value": "2010/06/13",
+                "source": "NEW1"
+
+            }
+        ],
+        "maxabsmag": [
+            {
+                "value": "-19.31",
+                "source": "NEW1"
+            }
+        ],
+
+        "maxappmag": [
+            {
+                "value": "19.68",
+                "source": "PRIVATE"
+            }
+        ],
+
+        "maxdate": [
+            {
+                "value": "2010/06/26",
+                "source": "PRIVATE"
+            }
+        ],
+
+        "sources":[
+            {
+                "alias": "NEW1",
+                "reference": "http://iopscience.iop.org/article/10.1088/0004-637X/793/1/38/pdf"
+            }
+        ]
+
+    },
+
+    "PTF11glr":{
+
+        "discoverdate": [
+            {
+                "value": "2011/05/28",
+                "source": "NEW1"
+
+            }
+        ],
+
+        "maxdate": [
+            {
+                "value": "2011/07/18",
+                "source": "PRIVATE"
+            }
+        ],
+
+        "maxappmag": [
+            {
+                "value": 20.04,
+                "source": "PRIVATE"
+            }
+        ],
+
+        "maxabsmag": [
+            {
+                "value": "-19.85",
+                "source": "NEW1"
+            }
+        ],
+        "sources":[
+            {
+                "alias": "NEW1",
+                "reference": "http://iopscience.iop.org/article/10.1088/0004-637X/793/1/38/pdf"
+            }
+        ]
+
+    },
+
+    "XJ1500+0154":{
+
+        "alias":[
+            {
+                "value": "3XMM J150052.0+015452",
+                "source": 1
+            }
+        ],
+
+        "discoverdate":[
+            {
+                "value": "2005/07/23",
+                "source": 1
+            }
+        ],
+
+        "maxdate": [
+            {
+                "value": "2009/02/12",
+                "source": 1
+            }
+        ]
+    },
+
+    "XJ1231+1106": {
+
+        "discoverdate": [
+            {
+              "source": "1",
+              "value": "2003/07/13"
+            }
+        ],
+
+        "maxdate": [
+            {
+                "value": "2005/12/13",
+                "source": 1
+            }
+        ]
+    },
+
+    "PS1-12yp": {
+
+        "maxappmag": [
+            {
+                "value": "19.87",
+                "source": 2
+            }
+        ],
+        "redshift": [
+            {
+                "value": "0.581",
+                "source": 2,
+                "derived": true
+            }
+
+        ],
+
+        "maxdate": [
+            {
+                "value": "2012/04/09",
+                "source": 2
+            }
+        ],
+        "discoverdate": [
+            {
+                "value": "2012/04/09",
+                "source": 2
+            }
+        ]
+    },
+
+    "OGLE17aaj": {
+        "redshift": [
+            {
+                "value": "0.116",
+                "source": "NEW1"
+            }
+        ],
+        "sources":[
+            {
+                "alias": "NEW1",
+                "reference": "http://www.astronomerstelegram.org/?read=9977"
+            }
+        ]
+    },
+
+    "PTF10iya":{
+        "maxdate": [
+            {
+                "value": "2010/06/06",
+                "source": "3"
+            }
+        ],
+        "discoverdate": [
+            {
+                "value": "2010/06/06",
+                "source": "3"
+            }
+        ],
+        "maxabsmag": [
+            {
+                "value": "-20.75",
+                "source": "3",
+                "derived": true
+            }
+        ],
+        "maxappmag": [
+            {
+                "value": "20.24",
+                "source": "3"
+            }
+        ]
+    },
+
+    "Swift J1112-82": {
+        "maxdate": [
+            {
+                "value": "2011/06/16",
+                "source": 3
+            }
+        ],
+        "discoverdate": [
+            {
+                "value": "2011/06/16",
+                "source": 3
+            }
+        ],
+        "lastupperlim":[
+            {
+                "value": "2011/06/12",
+                "source": 3
+            }
+        ]
+    },
+
+    "Swift J1644+57": {
+        "maxdate": [
+            {
+                "value": "2011/03/29",
+                "source": 3
+            }
+        ],
+        "lastupperlim":[
+            {
+                "value": "2011/03/24",
+                "source": "NEW1"
+            }
+        ],
+        "sources":[
+            {
+                "alias": "NEW1",
+                "reference": "doi:10.1038/nature10374"
+            }
+        ]
+    },
+
+    "Swift J2058+05": {
+        "maxdate": [
+            {
+                "value": "2011/05/17",
+                "source": 3
+            }
+        ],
+        "discoverdate": [
+            {
+                "value": "2011/05/17",
+                "source": 3
+            }
+        ],
+        "lastupperlim":[
+            {
+                "value": "2011/05/13",
+                "source": 3
+            }
+        ]
+    },
+
+    "3XMM J152130.7+074916": {
+        "maxdate":[
+            {
+                "value": "2000/08/23",
+                "source": 3
+            }
+        ]
+    },
+
+    "IGR J17361-4441": {
+        "maxdate":[
+            {
+                "value": "2011/08/11",
+                "source": 3
+            }
+        ],
+
+        "discoverdate":[
+            {
+                "value": "2011/08/11",
+                "source": 3
+            }
+        ]
+    },
+
+    "RBS 1032": {
+      "maxdate": [
+          {
+              "value": "1990/11/05",
+              "source": 3
+          }
+      ]
+    },
+
+    "RX J1242-11A":{
+        "maxdate": [
+            {
+                "value": "1992/07/15",
+                "source": "4, NEW1"
+            }
+        ],
+        "sources": [
+            {
+                "alias": "NEW1",
+                "reference": "https://arxiv.org/pdf/astro-ph/0402468.pdf"
+            }
+        ]
+    },
+
+   "ASASSN-14ae": {
+        "lastupperlim": [
+            {
+                "value": "2014/01/01",
+                "source": 3
+            }
+        ],
+        "class":[
+            {
+                "value": "golden",
+                "source": 3
+            }
+        ]
+
+   },
+
+   "ASASSN-14li": {
+        "lastupperlim": [
+            {
+                "value": "2014/07/13",
+                "source": 6
+            }
+        ],
+        "class":[
+            {
+                "value": "golden",
+                "source": 3
+            }
+        ]
+   },
+
+   "ASASSN-15lh": {
+        "lastupperlim":[
+            {
+                "value": "2015/04/24",
+                "source": 5
+            }
+        ],
+        "class":[
+            {
+                "value": "silver",
+                "source": 3
+            }
+        ]
+    },
+
+   "ASASSN-15oi": {
+        "lastupperlim": [
+            {
+                "value": "2015/07/25",
+                "source": 2
+            }
+        ],
+        "class":[
+            {
+                "value": "golden",
+                "source": 3
+            }
+        ]
+   },
+
+   "CSS100217": {
+        "lastupperlim": [
+            {
+                "value": "2009/11/25",
+                "source": 3
+            }
+        ],
+        "class":[
+            {
+                "value": "silver",
+                "source": 3
+            }
+        ]
+   },
+
+   "CXOU J0332": {
+
+        "alias":[
+            {
+                "value": "CDF-S XT1",
+                "source": 1
+            }
+        ],
+
+        "redshift":[
+            {
+                "value": 2.23,
+                "source": 1,
+                "derived": true
+            }
+        ],
+
+        "maxdate": [
+				{
+					"source": "1",
+					"value": "2014/10/01"
+				}
+		],
+
+        "lastupperlim": [
+            {
+                "value": "2014/10/01",
+                "source": 1
+            }
+        ],
+        "class":[
+            {
+                "value": "silver",
+                "source": 1
+            }
+        ]
+   },
+
+   "D23H-1": {
+        "lastupperlim": [
+            {
+                "value": "2007/09/10",
+                "source": 4
+            }
+        ],
+        "class":[
+            {
+                "value": "silver",
+                "source": 3
+            }
+        ]
+   },
+
+    "RX J1420+53": {
+        "maxdate":[
+            {
+                "value": "1990/12/05",
+                "source": 4
+            }
+        ],
+        "discoverdate": [
+            {
+                "value": "1990/12/05",
+                "source": 4
+            }
+        ]
+    },
+
+    "RX J1624+75": {
+        "maxdate": [
+            {
+                "value": "1990/10/07",
+                "source": 4
+            }
+        ],
+        "discoverdate": [
+            {
+                "value": "1990/10/07",
+                "source": 4
+            }
+        ]
+    },
+
+    "WINGS J1348": {
+        "maxdate":[
+            {
+                "value": "1999/12/20",
+                "source": 3
+            }
+        ]
+    },
+
+    "SDSSJ0952": {
+        "discoverdate": [
+            {
+                "value": "2004/05/18",
+                "source": "NEW1"
+            }
+        ],
+        "maxdate": [
+            {
+                "value": "2004/06/14",
+                "source": "NEW1",
+                "derived": true
+            }
+        ],
+        "sources":[
+            {
+                "alias": "NEW1",
+                "reference": "https://arxiv.org/pdf/1512.08614.pdf"
+            }
+        ]
+    },
+
+    "SDSSJ1201": {
+        "maxdate": [
+            {
+                "value": "2010/06/10",
+                "source": "3"
+            }
+        ]
+    },
+
+    "SDSSJ0159": {
+        "maxdate": [
+            {
+                "value": "2000/07/29",
+                "source": "1,3,4"
+            }
+        ]
+    },
+
     "UGC 01791":{
 		"discoverdate":[
             {
@@ -163,10 +893,10 @@
 
     "NGC 247":{
 		"schema":"https://github.com/astrocatalogs/tidaldisruptions/blob/f405406/SCHEMA.md",
-		"name":"NGC247",
+		"name":"NGC 247",
 		"alias":[
 			{
-				"value":"NGC247",
+				"value":"NGC 247",
 				"source":"1"
 			}
 		],
@@ -177,6 +907,13 @@
 				"source":"1,2"
 			}
 		],
+
+        "maxdate":[
+            {
+                "value": "2014/11/9",
+                "source": "3"
+            }
+        ],
 		"photometry":[
 			{
 				"time":[
