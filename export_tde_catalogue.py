@@ -138,6 +138,7 @@ def run(data):
         sources['ra'] = np.deg2rad(ra)
         sources['dec'] = np.deg2rad(dec)
         sources["Relative Injection Weight"] = np.ones_like(sources['ra'])
+
         sources['Distance'] = np.array(distance)
         sources['Name'] = names
         sources["Ref Time (MJD)"] = np.array(max_date)
