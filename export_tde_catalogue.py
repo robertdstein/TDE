@@ -66,8 +66,33 @@ def run(data):
         ("Ref Time (MJD)", np.float),
         ("Start Time (MJD)", np.float),
         ("End Time (MJD)", np.float),
-        ("Distance", np.float), ('Name', 'a30'),
+        ('Distance (Mpc)', np.float), ('Name', 'a30'),
     ]
+
+    for category in set(data.data_table["Category"]):
+        print "Category =", category
+
+        mask = data.data_table["Category"] == category
+
+        tab = data.data_table[mask]
+
+        sources = np.empty(np.sum(mask), dtype=fs_custom_dtype)
+
+        sources['ra'] = np.deg2rad(tab["RA"])
+        sources['dec'] = np.deg2rad(tab["Dec"])
+        sources["Relative Injection Weight"] = np.ones_like(sources['ra'])
+
+        sources['Distance (Mpc)'] = np.array(tab["Luminosity Distance (Mpc)"])
+        sources['Name'] = tab["Name"]
+        sources["Ref Time (MJD)"] = np.array(tab["Max Date"])
+        sources["Start Time (MJD)"] = np.array(
+            tab["Window Start Date"])
+        sources["End Time (MJD)"] = np.array(
+            tab["Window End Date"])
+        path = fs_core + "TDE_" + category + "_catalogue.npy"
+        np.save(path, sources)
+
+        print "Exporting catalogue with", np.sum(mask), "entries, to", path
 
     # Loops over catalogues to be created
     for catalogue_name, dictionary in export_catalogues.iteritems():
@@ -114,24 +139,24 @@ def run(data):
 
         n_sources = len(ra)
 
-        sources = np.empty(n_sources, dtype=tfe_custom_dtype)
-
-        sources['ra'] = np.deg2rad(ra)
-        sources['dec'] = np.deg2rad(dec)
-        sources['distance'] = np.ones_like(sources['ra'])
-        sources['flux'] = np.ones_like(sources['ra'])
-        normalisation = n_sources * 1.e-9 / np.sum(sources['flux'])
-        sources['flux'] = sources['flux'] * normalisation
-        sources['weight'] = np.ones_like(sources['ra'])
-
-        sources['discoverydate_mjd'] = np.array(discovery_date)
-        sources['name'] = names
-        sources["Start Time (MJD)"] = np.array(starts)
-        sources["End Time (MJD)"] = np.array(ends)
-        path = root + catalogue_name + "_catalogue.npy"
-        np.save(path, sources)
-
-        print "Exporting catalogue with", n_sources, "entries, to", path
+        # sources = np.empty(n_sources, dtype=tfe_custom_dtype)
+        #
+        # sources['ra'] = np.deg2rad(ra)
+        # sources['dec'] = np.deg2rad(dec)
+        # sources['distance'] = np.ones_like(sources['ra'])
+        # sources['flux'] = np.ones_like(sources['ra'])
+        # normalisation = n_sources * 1.e-9 / np.sum(sources['flux'])
+        # sources['flux'] = sources['flux'] * normalisation
+        # sources['weight'] = np.ones_like(sources['ra'])
+        #
+        # sources['discoverydate_mjd'] = np.array(discovery_date)
+        # sources['name'] = names
+        # sources["Start Time (MJD)"] = np.array(starts)
+        # sources["End Time (MJD)"] = np.array(ends)
+        # path = root + catalogue_name + "_catalogue.npy"
+        # np.save(path, sources)
+        #
+        # print "Exporting catalogue with", n_sources, "entries, to", path
 
         sources = np.empty(n_sources, dtype=fs_custom_dtype)
 
@@ -139,7 +164,7 @@ def run(data):
         sources['dec'] = np.deg2rad(dec)
         sources["Relative Injection Weight"] = np.ones_like(sources['ra'])
 
-        sources['Distance'] = np.array(distance)
+        sources['Distance (Mpc)'] = np.array(distance)
         sources['Name'] = names
         sources["Ref Time (MJD)"] = np.array(max_date)
         sources["Start Time (MJD)"] = np.array(starts)
@@ -172,9 +197,11 @@ def run(data):
 
     for name, tde_dict in data.data_dict.iteritems():
 
-        if name in sc.jetted_dict()["names"]:
+        # if name in sc.jetted_dict()["names"]:
+        if True:
 
-            veto = ["Earlier", "Later"]
+            # veto = ["Earlier", "Later"]
+            veto = []
 
             hits = [x for x in tde_dict["season"] if x in veto]
             seasons = tde_dict["season"]
@@ -193,26 +220,26 @@ def run(data):
 
                 maxtime = float(tde_dict["mjdmax"])
 
-                new_catalogue = np.empty(1, dtype=tfe_custom_dtype)
-                new_catalogue['ra'] = np.deg2rad(tde_dict["ra_deg"])
-                new_catalogue['dec'] = np.deg2rad(tde_dict["dec_deg"])
-                new_catalogue['distance'] = np.array([1.0])
-                new_catalogue['flux'] = np.array([1.e-9])
-                new_catalogue['weight'] = np.array([1.0])
-                new_catalogue['discoverydate_mjd'] = np.array(maxtime)
-                new_catalogue['name'] = name
-                new_catalogue["Start Time (MJD)"] = np.array(tde_dict["start"])
-                new_catalogue["End Time (MJD)"] = np.array(tde_dict["end"])
-                cat_path = single_source_dir + name + ".npy"
-
-                np.save(cat_path, new_catalogue)
+                # new_catalogue = np.empty(1, dtype=tfe_custom_dtype)
+                # new_catalogue['ra'] = np.deg2rad(tde_dict["ra_deg"])
+                # new_catalogue['dec'] = np.deg2rad(tde_dict["dec_deg"])
+                # new_catalogue['distance'] = np.array([1.0])
+                # new_catalogue['flux'] = np.array([1.e-9])
+                # new_catalogue['weight'] = np.array([1.0])
+                # new_catalogue['discoverydate_mjd'] = np.array(maxtime)
+                # new_catalogue['name'] = name
+                # new_catalogue["Start Time (MJD)"] = np.array(tde_dict["start"])
+                # new_catalogue["End Time (MJD)"] = np.array(tde_dict["end"])
+                # cat_path = single_source_dir + name + ".npy"
+                #
+                # np.save(cat_path, new_catalogue)
 
                 sources = np.empty(1, dtype=fs_custom_dtype)
 
                 sources['ra'] = np.deg2rad(tde_dict["ra_deg"])
                 sources['dec'] = np.deg2rad(tde_dict["dec_deg"])
                 sources["Relative Injection Weight"] = np.array([1.0])
-                sources['Distance'] = np.array([1.0])
+                sources['Distance (Mpc)'] = np.array(tde_dict["dist"])
                 sources['Name'] = name
                 sources["Ref Time (MJD)"] = np.array(maxtime)
                 sources["Start Time (MJD)"] = np.array(tde_dict["start"])
@@ -220,80 +247,80 @@ def run(data):
                 path = fs_single_source_dir + name + "_catalogue.npy"
                 np.save(path, sources)
 
-                t0 = float(tde_dict["start"]) - maxtime
-                length = float(tde_dict["end"]) - float(tde_dict["start"])
+                # t0 = float(tde_dict["start"]) - maxtime
+                # length = float(tde_dict["end"]) - float(tde_dict["start"])
+                #
+                # for gamma in spectral_indices:
+                #     section_name = "Individual_TDEs/" + \
+                #                    "".join([x for x in name if x != " "]) + \
+                #                    "_gamma=" + str(gamma) + "/"
+                #
+                #     config.add_section(section_name)
+                #     config.set(section_name, "UseEnergy", True)
+                #     config.set(section_name, "FitGamma", True)
+                #     config.set(section_name, "FixedGamma", gamma)
+                #     config.set(section_name, "InjectionGamma", gamma)
+                #     config.set(section_name, "UseTime", True)
+                #     config.set(section_name, "SimTimeModel", "Box")
+                #     config.set(section_name, "SimTimeParameters",
+                #                {"t0": t0, "length": sim_length})
+                #     config.set(section_name, "ReconTimeModel", "Box")
+                #     config.set(section_name, "ReconTimeParameters",
+                #                {"t0": t0, "length": length})
+                #     config.set(section_name, "FitWeights", False)
+                #     config.set(section_name, "UseBox", False)
+                #     config.set(section_name, "CatName", cat_path)
+                #     config.set(section_name, "DataConfig", combo_name)
+                #
+                #     sens_save_path = core + "/Output/PS_k_Sensitivities/" + \
+                #         seasons[0] + ".npy"
+                #
+                #     data = np.load(sens_save_path)[0].T
+                #
+                #     f = interp1d(data[0], data[1])
+                #     sens = 150 * f(np.sin(np.deg2rad(tde_dict["dec_deg"])))
+                #
+                #     if float(tde_dict["start"]) < datastart:
+                #         delta = datastart - float(tde_dict["start"])
+                #         frac = (length - delta)/length
+                #
+                #         sens *= 1/frac
+                #
+                #     elif float(tde_dict["end"]) > dataend:
+                #         delta = float(tde_dict["end"]) - dataend
+                #         frac = (length - delta)/length
+                #
+                #         sens *= 1/frac
+                #
+                #     sens *= 12 ** ((float(gamma) - 2.0)/0.25)
+                #
+                #     sens *= length / 450
+                #
+                #     config.set(section_name, "MaxK", sens)
 
-                for gamma in spectral_indices:
-                    section_name = "Individual_TDEs/" + \
-                                   "".join([x for x in name if x != " "]) + \
-                                   "_gamma=" + str(gamma) + "/"
-
-                    config.add_section(section_name)
-                    config.set(section_name, "UseEnergy", True)
-                    config.set(section_name, "FitGamma", True)
-                    config.set(section_name, "FixedGamma", gamma)
-                    config.set(section_name, "InjectionGamma", gamma)
-                    config.set(section_name, "UseTime", True)
-                    config.set(section_name, "SimTimeModel", "Box")
-                    config.set(section_name, "SimTimeParameters",
-                               {"t0": t0, "length": sim_length})
-                    config.set(section_name, "ReconTimeModel", "Box")
-                    config.set(section_name, "ReconTimeParameters",
-                               {"t0": t0, "length": length})
-                    config.set(section_name, "FitWeights", False)
-                    config.set(section_name, "UseBox", False)
-                    config.set(section_name, "CatName", cat_path)
-                    config.set(section_name, "DataConfig", combo_name)
-
-                    sens_save_path = core + "/Output/PS_k_Sensitivities/" + \
-                        seasons[0] + ".npy"
-
-                    data = np.load(sens_save_path)[0].T
-
-                    f = interp1d(data[0], data[1])
-                    sens = 150 * f(np.sin(np.deg2rad(tde_dict["dec_deg"])))
-
-                    if float(tde_dict["start"]) < datastart:
-                        delta = datastart - float(tde_dict["start"])
-                        frac = (length - delta)/length
-
-                        sens *= 1/frac
-
-                    elif float(tde_dict["end"]) > dataend:
-                        delta = float(tde_dict["end"]) - dataend
-                        frac = (length - delta)/length
-
-                        sens *= 1/frac
-
-                    sens *= 12 ** ((float(gamma) - 2.0)/0.25)
-
-                    sens *= length / 450
-
-                    config.set(section_name, "MaxK", sens)
-
-    analysis_path = sourcepath + "analysis_config/individual_TDEs.ini"
-
-    with open(analysis_path, "wb") as f:
-        config.write(f)
-
-    combo_datasets = list(set(combo_datasets))
-
-    for dataset in combo_datasets:
-        seasons = dataset[:-4].split("+")
-
-        new_config = ConfigParser.ConfigParser()
-
-        for season in seasons:
-            old = ConfigParser.ConfigParser()
-            old_path = data_dir + season + ".ini"
-            old.read(old_path)
-
-            new_config.add_section(season)
-
-            for (var, val) in old.items(season):
-                new_config.set(season, var, val)
-
-        new_path = data_dir + dataset
-
-        with open(new_path, "wb") as file:
-            new_config.write(file)
+    # analysis_path = sourcepath + "analysis_config/individual_TDEs.ini"
+    #
+    # with open(analysis_path, "wb") as f:
+    #     config.write(f)
+    #
+    # combo_datasets = list(set(combo_datasets))
+    #
+    # for dataset in combo_datasets:
+    #     seasons = dataset[:-4].split("+")
+    #
+    #     new_config = ConfigParser.ConfigParser()
+    #
+    #     for season in seasons:
+    #         old = ConfigParser.ConfigParser()
+    #         old_path = data_dir + season + ".ini"
+    #         old.read(old_path)
+    #
+    #         new_config.add_section(season)
+    #
+    #         for (var, val) in old.items(season):
+    #             new_config.set(season, var, val)
+    #
+    #     new_path = data_dir + dataset
+    #
+    #     with open(new_path, "wb") as file:
+    #         new_config.write(file)

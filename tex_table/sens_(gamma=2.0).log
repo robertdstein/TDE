@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2018.3.14)  21 MAR 2018 09:14
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2018.3.14)  5 JUL 2018 13:33
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -350,14 +350,57 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5> on input line 3.
 \c__siunitx_mathtt_int=\count146
- [1
+
+Underfull \hbox (badness 10000) in paragraph at lines 8--9
+[]|\OT1/cmr/m/n/10 Time-Integrated Sen-si-tiv-ity
+ []
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+! siunitx error: "invalid-token-in-number"
+! 
+! Invalid token 'n' in numerical input.
+! 
+! See the siunitx documentation for further information.
+! 
+! For immediate help type H <return>.
+!...............................................  
+                                                  
+l.12 ...de=figures, scientific-notation=true]{nan}
+                                                    \\
+|'''''''''''''''''''''''''''''''''''''''''''''''
+| Numbers can only contain tokens defined using the 'input-...' options:
+| the token 'n' is not set up as a valid part of a number.
+|...............................................
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!
+! siunitx error: "invalid-number"
+! 
+! Invalid numerical input 'nan'.
+! 
+! See the siunitx documentation for further information.
+! 
+! For immediate help type H <return>.
+!...............................................  
+                                                  
+l.12 ...de=figures, scientific-notation=true]{nan}
+                                                    \\
+|'''''''''''''''''''''''''''''''''''''''''''''''
+| The input given as a number does not make logical sense. This happens, for
+| example, if a number only contains a sign.
+|...............................................
+
+[1
 
 {/usr/local/texlive/2017/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
 (./sens_(gamma=2.0).aux) ) 
 Here is how much of TeX's memory you used:
  9928 strings out of 492995
  219521 string characters out of 6132704
- 239188 words of memory out of 5000000
+ 227188 words of memory out of 5000000
  13507 multiletter control sequences out of 15000+600000
  5049 words of font info for 20 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -370,7 +413,7 @@ fonts/cm/cmr5.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfon
 ts/cm/cmr7.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/
 cm/cmsy10.pfb></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/c
 m/cmsy7.pfb>
-Output written on sens_(gamma=2.0).pdf (1 page, 69193 bytes).
+Output written on sens_(gamma=2.0).pdf (1 page, 64250 bytes).
 PDF statistics:
  36 PDF objects out of 1000 (max. 8388607)
  25 compressed objects within 1 object stream

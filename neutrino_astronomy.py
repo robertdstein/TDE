@@ -11,7 +11,6 @@ from astropy.cosmology import WMAP5, WMAP7
 # cosmology.set_current(WMAP7)
 
 from export_tde_catalogue import sim_length, core, spectral_indices
-
 import export_table_to_tex
 
 

@@ -19,6 +19,11 @@ import readsupernova as rs
 import selected_candidates as sc
 import loglikelihoodminimisation as llh
 import ConfigParser
+from astropy import units as u
+# from astropy import cosmology
+# from astropy.cosmology import WMAP5, WMAP7
+from astropy.coordinates import Distance
+# cosmology.set_current(WMAP7)
 import math
 
 # Sets the minimum number of points required for a curve fit
@@ -66,8 +71,11 @@ class FullSet:
         self.data_table = np.nan
         self.data_dict = np.nan
         self.neutrino_table = np.nan
+        self.data_start = 54561.4746759
         self.list_catalogue()
-        self.export_catalogue_to_wikitext()
+
+        for cat in ["gold", "silver", "jetted"]:
+            self.export_catalogue_to_wikitext(cat)
 
     def extract(self):
         """Extract all data from tde.zip.
@@ -236,14 +244,14 @@ class FullSet:
             ("NED Redshift", np.float),
             ("Max Apparent Magnitude", np.float),
             ("Max Absolute Magnitude", np.float),
-            ("Max Luminosity", np.float)
+            ("Max Luminosity", np.float),
+            ("Luminosity Distance (Mpc)", np.float),
+            ("Category", "S50")
         ])
 
         table = np.zeros(self.total_entries, dtype=dt)
 
         self.data_dict = dict()
-
-        data_start = 54561.4746759
 
         pre_emission_window = 365
         post_emission_window = 100
@@ -260,6 +268,18 @@ class FullSet:
             if True:
                 window_end = tde.mjdmax + post_emission_window
 
+            print tde.redshift_float
+            if np.isnan(float(tde.redshift_float)):
+                lum_d = np.nan
+            else:
+                lum_d = Distance(z=float(tde.redshift_float)).to("Mpc").value
+
+            # if str(tde.lumdist.u_value) == "Mpc":
+            #     distance.append(tde.lumdist.value)
+            # else:
+            #     print vars(tde.lumdist)
+            #     raise Exception("Units of distance are not correct!")
+
             table[i] = np.array([(
                 str(tde.name), str(tde.name).lower(),
                 str(tde.alias), str(tde.host),
@@ -267,7 +287,8 @@ class FullSet:
                 tde.ra_deg, tde.dec_deg, tde.mjddisc, tde.mjdmax, tde.lastul,
                 window_start, window_end, tde.NED_ra, tde.NED_dec,
                 tde.NED_redshift,
-                tde.app_mag_max, tde.abs_mag_max,  tde.lum
+                tde.app_mag_max, tde.abs_mag_max,  tde.lum, lum_d,
+                tde.tde_category
             )], dtype=dt)
 
             tde_dict = dict()
@@ -279,6 +300,8 @@ class FullSet:
             tde_dict["start"] = window_start
             tde_dict["end"] = window_end
             tde_dict["z"] = tde.redshift_float
+            tde_dict["dist"] = lum_d
+            tde_dict["category"] = tde.tde_category
             tde_dict["season"] = []
             self.data_dict[tde.name] = tde_dict
 
@@ -287,17 +310,18 @@ class FullSet:
 
         emission_window = pre_emission_window + post_emission_window
 
-        mask = self.data_table["Window End Date"] < data_start
+        mask = self.data_table["Window End Date"] < self.data_start
 
-        headers = ["Name",  "Host", "Redshift", "RA", "Dec",
-                   "Disc Date", "Max Date", "Last Upper Limit",
-                   "Window Start Date", "Window End Date"
+        headers = ["Name", "Category", "Redshift", "Luminosity Distance (Mpc)",
+                   "RA", "Dec",
+                   "Max Date", "Last Upper Limit",
+                   "Window Start Date", "Window End Date",
                    ]
 
         print "Of", len(self.data_table["Max Date"]), "entries, we remove",
         print len(self.data_table['Window Start Date'][mask]),
         print "events that finished before IC40 (",
-        print data_start, "), leaving",
+        print self.data_start, "), leaving",
         print len(self.data_table['Window Start Date'][~mask]), "events."
 
         print
@@ -322,14 +346,14 @@ class FullSet:
 
             data_start = float(conf.get("IC40", "start_mjd"))
 
-            pre_mask = self.data_table["Window Start Date"] < data_start
+            pre_mask = self.data_table["Window Start Date"] < self.data_start
 
             for tde in self.data_table[pre_mask]["Name"]:
                 self.data_dict[tde]["season"].append("Earlier")
 
             print "Early Entries \n"
 
-            print "Before", data_start, "onwards, or unknown date."
+            print "Before", self.data_start, "onwards, or unknown date."
 
             print "(", len(self.data_table[pre_mask]), ") entries \n"
 
@@ -373,11 +397,29 @@ class FullSet:
             for tde in self.data_table[~other_mask]["Name"]:
                 self.data_dict[tde]["season"].append("Later")
 
-    def export_catalogue_to_wikitext(self):
-        path = "wikitext.txt"
-        with open (path, "w") as f:
+        # print self.data_table["Category"]
 
-            variables = ["Name",  "Redshift", "RA", "Dec", "Max Date"]
+        for category in set(self.data_table["Category"]):
+            print "Category", category
+
+            mask = self.data_table["Category"] == category
+
+            print tabulate(self.data_table[mask][headers], headers)
+
+    def export_catalogue_to_wikitext(self, category):
+        path = "wikitext_" + category + ".txt"
+
+        mask = self.data_table["Window Start Date"] < self.data_start
+
+        dt = self.data_table[~mask]
+
+        ct = dt[dt["Category"] == category]
+
+        with open(path, "w") as f:
+
+            variables = ["Name",  "Luminosity Distance (Mpc)",
+                         "RA", "Dec", "Window Start Date",
+                         "Max Date", "Window End Date", "Category"]
 
             f.write("{| class ='wikitable sortable' border='1'|thumb| \n")
             headers = "!"
@@ -386,7 +428,7 @@ class FullSet:
 
             f.write(headers[:-2] + " \n")
 
-            for row in self.data_table[variables]:
+            for row in ct[variables]:
                 f.write("|- \n")
                 new = "|"
                 for entry in row:
@@ -772,6 +814,8 @@ class TDE_Candidate:
         self.NED_redshift = np.nan
         self.NED_name = np.nan
 
+        self.tde_category = np.nan
+
         for key, val in jsonfile[0].items():
 
             if key == "alias":
@@ -904,7 +948,6 @@ class TDE_Candidate:
 
             self.host = hosts
 
-
         except UnboundLocalError:
             self.host = np.nan
 
@@ -916,6 +959,9 @@ class TDE_Candidate:
 
         if hasattr(self, "maxabsmag"):
             self.abs_mag_max = self.maxabsmag.value
+
+        if hasattr(self, "category"):
+            self.tde_category = self.category.value
 
         self.swiftdata()
         self.spectrum()
@@ -1040,6 +1086,9 @@ class TDE_Candidate:
         """Converts the discovery date to MJD units.
         Does the same for the maximum date, and maximum visual date.
         """
+
+        print self.name
+
         if hasattr(self, "discoverdate"):
             val = self.discoverdate.value.split("/")
             if len(val) == 3:

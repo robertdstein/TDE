@@ -38,9 +38,9 @@
                 "rising": false
             }
         ],
-        "class":[
+        "category": [
             {
-                "value": "golden",
+                "value": "gold",
                 "source": 3,
                 "reason": "Well-observed TDE with multiple spectra."
             }
@@ -58,9 +58,9 @@
 
             }
         ],
-        "class":[
+        "category": [
             {
-                "value": "golden",
+                "value": "gold",
                 "source": 3,
                 "reason": "Well-observed TDE with multiple spectra."
             }
@@ -76,7 +76,7 @@
                 "rising": true
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -96,13 +96,13 @@
             {
                 "value": "2015/07/25",
                 "source": 2,
-                "method": "Last non-detection by ASAS-SN before peak."
+                "method": "Last non-detection by ASAS-SN before peak.",
                 "rising": false
             }
         ],
-        "class":[
+        "category": [
             {
-                "value": "golden",
+                "value": "gold",
                 "source": 3,
                 "reason": "Well-observed TDE with multiple spectra."
             }
@@ -118,7 +118,7 @@
                 "rising": true
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -130,7 +130,7 @@
    "CSS100217": {
         "lastupperlim": [
             {
-                "value": "2009/18/12",
+                "value": "2009/12/18",
                 "source": 4,
                 "method": "First detection in rising lightcurve by CRTS (MJD 55183.41)",
                 "rising": true
@@ -143,7 +143,7 @@
 					"value": "2010/02/23"
 				}
 		],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 1,
@@ -184,9 +184,9 @@
                 "rising": true
             }
         ],
-        "class":[
+        "category": [
             {
-                "value": "bronze",
+                "value": "blacklist",
                 "source": 1,
                 "reason": "Distant X-Ray transient possibly consistent with TDE, GRB afterglow or other unknown transient class. The TDE type would be WD+IMBH."
             }
@@ -202,7 +202,7 @@
                 "rising": true
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 4,
@@ -220,7 +220,7 @@
                 "rising": true
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -251,7 +251,7 @@
                 "rising": true
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -276,11 +276,11 @@
                "derived": true
            }
        ],
-       "class": [
+       "category":  [
            {
                "value": "silver",
                "source": 1,
-               "reason": "Likely TDE found in ULIGR, with spectrum suggesting long-lived flare."
+               "reason": "Likely TDE found in ULIRG, with spectrum suggesting long-lived flare."
            }
        ],
        "sources": [
@@ -293,8 +293,8 @@
        ]
    },
 
-   "IGR J17361–4441": {
-        "class":[
+   "IGR J17361-4441": {
+        "category": [
             {
                 "value": "blacklist",
                 "source": 3,
@@ -317,7 +317,7 @@
     },
 
    "iPTF16axa": {
-        "class":[
+        "category": [
             {
                 "value": "gold",
                 "source": 1,
@@ -335,7 +335,7 @@
     },
 
     "iPTF16fnl": {
-        "class":[
+        "category": [
             {
                 "value": "gold",
                 "source": 1,
@@ -348,6 +348,27 @@
                 "source": 3,
                 "method": "First day in which the rising TDE lightcurve was observed.",
                 "rising": true
+            }
+        ]
+    },
+
+    "J030257":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+
+    "J091225":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
             }
         ]
     },
@@ -371,7 +392,7 @@
                 "source": 1
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 1,
@@ -415,7 +436,7 @@
                 "source": "1"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 1,
@@ -438,6 +459,126 @@
                "reference": "Drake et al. (2011)"
            }
        ]
+    },
+
+    "J100933":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J113527":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J121116":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J123715":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J130819":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J133737":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J133837":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J134244":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J141036":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered with rising then falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J142401":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J145851":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered via falling IR lightcurve, with no visible optical flare"
+            }
+        ]
+    },
+
+    "J155223":{
+        "category": [
+            {
+                "value": "obscured",
+                "source": 1,
+                "reason": "TDE candidate discovered with rising then falling IR lightcurve, with no visible optical flare"
+            }
+        ]
     },
 
     "J233454":{
@@ -467,7 +608,7 @@
                "reference": "Drake et al. (2011)"
            }
        ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 1,
@@ -512,11 +653,11 @@
         ]
     },
 
-    "MAXI J1907+132":{
+    "MAXI J1807+132":{
 
-        "class":[
+        "category": [
             {
-                "value": "bronze",
+                "value": "blacklist",
                 "source": "NEW1",
                 "reason": "likely X-Ray binary"
             }
@@ -542,7 +683,7 @@
 		"discoverdate":[
 			{
 				"value":"2014/07/01",
-				"derived":true,
+				"derived": true,
 				"source":"1,2"
 			}
 		],
@@ -554,7 +695,7 @@
             }
         ],
 
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 1,
@@ -566,7 +707,8 @@
             {
                 "value": "2011/02/01",
                 "source": 3,
-                "method": "Last X-Ray upper limit."
+                "method": "Last X-Ray upper limit.",
+                "rising": true
             }
         ],
 
@@ -962,17 +1104,6 @@
 		]
 	},
 
-
-   "NGC 3599": {
-        "class":[
-            {
-                "value": "silver",
-                "source": 1,
-                "reason": "Well-sampled post-peak optical TDE with multiple spectra and evidence of historical AGN activity"
-            }
-        ]
-    },
-
    "OGLE16aaa": {
         "lastupperlim": [
             {
@@ -981,7 +1112,7 @@
                 "method": "First observation in rising light curve"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 2,
@@ -991,7 +1122,7 @@
    },
 
    "OGLE17aaj": {
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 2,
@@ -1034,7 +1165,7 @@
                 "method": "First observation in rising light curve (detected by Swift/BAT)"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -1119,7 +1250,7 @@
                 "method": "First observation in rising light curve (detected by Swift/BAT)"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -1151,7 +1282,7 @@
                 "method": "First observation in rising light curve (detected by Swift/BAT)"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -1195,7 +1326,7 @@
                 "rising": true
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -1212,7 +1343,7 @@
                 "method": "First observation in rising light curve"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "gold",
                 "source": 3,
@@ -1230,7 +1361,7 @@
                 "method": "First observation in rising light curve"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "gold",
                 "source": 3,
@@ -1248,7 +1379,7 @@
                 "method": "Last non-rising point in CRTS lightcurve, read off plot"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 2,
@@ -1312,7 +1443,7 @@
                 "rising": true
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -1329,6 +1460,36 @@
           ]
     },
 
+    "PS18kh":{
+        "maxdate": [
+            {
+                "value": "2018/03/13",
+                "source": "NEW1"
+            }
+        ],
+        "lastupperlim": [
+            {
+                "value": "2018/03/02",
+                "source": 1,
+                "method": "First detection in rising lightcurve",
+                "rising": true
+            }
+        ],
+        "category": [
+            {
+                "value": "gold",
+                "source": "NEW1",
+                "reason": "Well-observed TDE wth multiple spectra confirming classification"
+            }
+        ],
+        "sources": [
+             {
+                 "alias": "NEW1",
+                 "reference": "Private ZTF data"
+             }
+          ]
+    },
+
     "PTF09axc":{
         "lastupperlim": [
             {
@@ -1337,7 +1498,7 @@
                 "method": "First observation in rising light curve"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "gold",
                 "source": 3,
@@ -1355,7 +1516,7 @@
                 "method": "First observation in rising light curve"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "gold",
                 "source": 3,
@@ -1373,7 +1534,7 @@
                 "method": "First observation in rising light curve"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "gold",
                 "source": 3,
@@ -1417,7 +1578,7 @@
                 "method": "Last non-observation in high-cadence (5 day) survey"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -1465,7 +1626,7 @@
                 "method": "First detection in rising lightcurve"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "gold",
                 "source": 3,
@@ -1512,7 +1673,7 @@
                 "method": "First detection in rising lightcurve"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "gold",
                 "source": 3,
@@ -1629,7 +1790,7 @@
                 "source": "3"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -1672,11 +1833,12 @@
             {
                 "value": "2017/02/18",
                 "source": 3,
-                "method": "Discovery Date for transient. Full lightcurve not yet public, but lightcurve around peak was published. The peak occurs after this time, so this time was in the rising phase."
+                "method": "Discovery Date for transient. Full lightcurve not yet public, but lightcurve around peak was published. The peak occurs after this time, so this time was in the rising phase.",
+                "rising": true
             }
         ],
 
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -1702,10 +1864,11 @@
             {
                 "value": "2011/06/12",
                 "source": 3,
-                "method": "Last non-detection by Swift BAT before discovery"
+                "method": "Last non-detection by Swift BAT before discovery",
+                "rising": false
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "jetted",
                 "source": 3,
@@ -1725,7 +1888,8 @@
             {
                 "value": "2011/03/24",
                 "source": "NEW1",
-                "method": "Last non-detection by Swift BAT before discovery"
+                "method": "Last non-detection by Swift BAT before discovery",
+                "rising": false
             }
         ],
         "sources":[
@@ -1734,7 +1898,7 @@
                 "reference": "doi:10.1038/nature10374"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "jetted",
                 "source": 3,
@@ -1760,32 +1924,15 @@
             {
                 "value": "2011/05/13",
                 "source": 3,
-                "method": "Last non-detection by Swift BAT before discovery"
+                "method": "Last non-detection by Swift BAT before discovery",
+                "rising": false
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "jetted",
                 "source": 3,
                 "reason": "Jetted TDE."
-            }
-        ]
-    },
-
-    "TDE1": {
-        "lastupperlim": [
-            {
-                "value": "2017/02/18",
-                "source": 3,
-                "method": "Discovery Date for transient. Full lightcurve not yet public, but lightcurve around peak was published. The peak occurs after this time, so this time was in the rising phase."
-            }
-        ],
-
-        "class":[
-            {
-                "value": "silver",
-                "source": 3,
-                "reason": "Classified as Type IIn SLSN, but with X-Ray emission. TDE interpretation is also consistent."
             }
         ]
     },
@@ -1830,7 +1977,7 @@
                 "method": "First observation in rising light curve (detected by Swift/BAT)"
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
@@ -1887,13 +2034,38 @@
                 "source": 1
             }
         ],
-        "class":[
+        "category": [
             {
                 "value": "silver",
                 "source": 3,
                 "reason": "Consistent with decade-long TDE."
             }
         ]
+    },
+
+    "XMMSL1 J0740-85":{
+        "lastupperlim": [
+            {
+                "value": "2014/03/24",
+                "source": 2,
+                "rising": false,
+                "method": "Last XMM slew non-detection before discovery in later slew."
+            }
+        ],
+        "maxdate":[
+            {
+                "value": "2014/04/01",
+                "source": 2
+            }
+        ],
+        "category": [
+            {
+                "value": "gold",
+                "source": 2,
+                "reason": "TDE observed in X-Ray and optical, as well as radio. Multiple spectra support this interpretation"
+            }
+        ]
+
     },
 
     "NGC 6021":{
