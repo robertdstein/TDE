@@ -1153,7 +1153,7 @@
         ],
         "maxdate":[
             {
-                "value": "2010/02/08",
+                "value": "2010/02/18",
                 "source": "3",
                 "derived": true
             }
@@ -1162,7 +1162,7 @@
             {
                 "value": "2010/02/08",
                 "source": 3,
-                "method": "First observation in rising light curve (detected by Swift/BAT)"
+                "method": "First observation in rising light curve (detected by Swift/BAT). Assumed 10 days to peak, as this info is not given."
             }
         ],
         "category": [
@@ -1172,7 +1172,6 @@
                 "reason": "Discovered through archival X-Ray search, with no spectroscopic confirmation"
             }
         ]
-
     },
 
     "PGC 133344":{
@@ -1240,7 +1239,7 @@
             {
                 "value": "2010/03/03",
                 "source": "3",
-              "derived": true
+                "derived": true
             }
         ],
         "lastupperlim": [
@@ -1257,7 +1256,6 @@
                 "reason": "Discovered through archival X-Ray search, with no spectroscopic confirmation"
             }
         ]
-
     },
 
     "PGC 1190358":{
@@ -1460,7 +1458,7 @@
           ]
     },
 
-    "PS18kh":{
+    "AT2018zr":{
         "maxdate": [
             {
                 "value": "2018/03/13",
@@ -1477,7 +1475,7 @@
         ],
         "category": [
             {
-                "value": "gold",
+                "value": "FUTURE_gold",
                 "source": "NEW1",
                 "reason": "Well-observed TDE wth multiple spectra confirming classification"
             }
