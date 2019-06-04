@@ -74,7 +74,7 @@ class FullSet:
         self.data_start = 54561.4746759
         self.list_catalogue()
 
-        for cat in ["gold", "silver", "jetted"]:
+        for cat in ["gold", "silver", "jetted", "obscured"]:
             self.export_catalogue_to_wikitext(cat)
 
     def extract(self):
@@ -239,6 +239,7 @@ class FullSet:
             ("Last Upper Limit", np.float),
             ("Window Start Date", np.float),
             ("Window End Date", np.float),
+            ("Window Length", np.float),
             ("NED RA", np.float),
             ("NED Dec", np.float),
             ("NED Redshift", np.float),
@@ -256,11 +257,17 @@ class FullSet:
         pre_emission_window = 365
         post_emission_window = 100
 
+        min_pre_window = 30.
+
         for i, name in enumerate(vars(self.TDEs)):
             tde = getattr(self.TDEs, name)
 
             if not np.isnan(tde.lastul):
                 window_start = float(tde.lastul)
+
+                if (tde.mjdmax - window_start < min_pre_window) and (
+                        tde.tde_category != "jetted"):
+                    window_start = tde.mjdmax - min_pre_window
 
             else:
                 window_start = tde.mjdmax - pre_emission_window
@@ -285,8 +292,8 @@ class FullSet:
                 str(tde.alias), str(tde.host),
                 tde.redshift_float,
                 tde.ra_deg, tde.dec_deg, tde.mjddisc, tde.mjdmax, tde.lastul,
-                window_start, window_end, tde.NED_ra, tde.NED_dec,
-                tde.NED_redshift,
+                window_start, window_end, window_end - window_start,
+                tde.NED_ra, tde.NED_dec, tde.NED_redshift,
                 tde.app_mag_max, tde.abs_mag_max,  tde.lum, lum_d,
                 tde.tde_category
             )], dtype=dt)
@@ -315,7 +322,7 @@ class FullSet:
         headers = ["Name", "Category", "Redshift", "Luminosity Distance (Mpc)",
                    "RA", "Dec",
                    "Max Date", "Last Upper Limit",
-                   "Window Start Date", "Window End Date",
+                   "Window Start Date", "Window End Date", "Window Length"
                    ]
 
         print "Of", len(self.data_table["Max Date"]), "entries, we remove",
@@ -419,7 +426,8 @@ class FullSet:
 
             variables = ["Name",  "Luminosity Distance (Mpc)",
                          "RA", "Dec", "Window Start Date",
-                         "Max Date", "Window End Date", "Category"]
+                         "Max Date", "Window End Date",
+                         "Window Length", "Category"]
 
             f.write("{| class ='wikitable sortable' border='1'|thumb| \n")
             headers = "!"

@@ -74,5 +74,5 @@ if cfg.plot:
 if cfg.export:
     export_tde_catalogue.run(dataset)
 
-if cfg.neutrino:
-    neutrino_astronomy.run(dataset)
+# if cfg.neutrino:
+#     neutrino_astronomy.run(dataset)
