@@ -4,7 +4,8 @@ import import_data as i
 import add_metadata as md
 from classes import FullSet
 from sklearn.externals import joblib
-import export_tde_catalogue
+import export_tde_catalogue, neutrino_astronomy
+from pathlib2 import Path
 
 parser = argparse.ArgumentParser(description='Select modues to run')
 parser.add_argument("-u", "--update", action="store_true")
@@ -18,8 +19,18 @@ parser.add_argument("-n", "--neutrino", action="store_true")
 
 cfg = parser.parse_args()
 
+<<<<<<< HEAD
 root_path = os.path.dirname(os.path.abspath(__file__)) + "/"
 output_path = "/afs/ifh.de/user/s/steinrob/scratch/TDE_Output/"
+=======
+root_path = os.path.abspath(os.path.dirname(__file__))
+output_path = str(Path.home()) +"/TDE_output/"
+
+try:
+    os.makedirs(output_path)
+except OSError:
+    pass
+>>>>>>> 2c74010ac259cb51852cdf4e048ed6c5f3f508b3
 
 sourcepath = output_path + "tde_cat.zip"
 varpath = root_path + "variables.csv"
