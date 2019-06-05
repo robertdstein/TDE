@@ -70,7 +70,7 @@ def run(data):
         np.save(path, sources)
 
         print "Exporting catalogue with", np.sum(mask), "entries, to", path
-        
+
     for category in set(data.data_table["Category"]):
         print "Category =", category
 
