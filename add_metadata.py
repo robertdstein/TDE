@@ -1,4 +1,4 @@
-import json
+import simplejson
 import zipfile
 import os
 import re
@@ -28,16 +28,26 @@ def run(zip_file_name="/afs/ifh.de/user/s/steinrob/scratch/TDE_output/tde_cat"
     temp_path = root + "temp.zip"
     with zipfile.ZipFile(zip_path, 'r') as zf:
         with zipfile.ZipFile(temp_path, 'w') as tf:
-            file_list = zf.namelist()[2:]
+
+            ignore = [
+                "tde-1980-2025-master/",
+                "tde-1980-2025-master/.gitignore",
+                "tde-1980-2025-master/---.json"
+            ]
+
+            file_list = [x for x in zf.namelist() if x not in ignore]
+
+
             with open(metadata_path) as metadata:
-                md = json.load(metadata)
+                md = simplejson.load(metadata)
 
                 # Loops over each file in TDE zip
 
                 for filename in file_list:
+                    print filename
                     with zf.open(filename, "r") as f:
                         data = f.read()
-                        d = json.loads(data)
+                        d = simplejson.loads(data)
                         name = d.keys()[0]
 
                         # Checks for additional metadata
@@ -62,11 +72,11 @@ def run(zip_file_name="/afs/ifh.de/user/s/steinrob/scratch/TDE_output/tde_cat"
                                 for new_source in new_data["sources"]:
                                     if "NEW" in new_source["alias"]:
                                         new_id = str(source_no)
-                                        old_json = json.dumps(new_data)
+                                        old_json = simplejson.dumps(new_data)
                                         new_json = re.sub(
                                             new_source["alias"], new_id,
                                             old_json)
-                                        new_data = json.loads(new_json)
+                                        new_data = simplejson.loads(new_json)
                                         source_no += 1
 
                             for key in new_data.keys():
@@ -88,7 +98,7 @@ def run(zip_file_name="/afs/ifh.de/user/s/steinrob/scratch/TDE_output/tde_cat"
                         # tabs, in order to match the pre-existing format
                         # used by the Open TDE Catalog
 
-                        g = json.dumps(d, indent=4)
+                        g = simplejson.dumps(d, indent=4)
                         tabbed_g = re.sub(
                             '\n +', lambda match: '\n' + '\t' * (
                                 len(match.group().strip('\n')) / 3),

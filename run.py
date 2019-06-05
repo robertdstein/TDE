@@ -18,7 +18,7 @@ parser.add_argument("-n", "--neutrino", action="store_true")
 
 cfg = parser.parse_args()
 
-root_path = "/afs/ifh.de/user/s/steinrob/Desktop/python/TDE/"
+root_path = os.path.dirname(os.path.abspath(__file__)) + "/"
 output_path = "/afs/ifh.de/user/s/steinrob/scratch/TDE_Output/"
 
 sourcepath = output_path + "tde_cat.zip"

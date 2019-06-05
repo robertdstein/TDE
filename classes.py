@@ -86,10 +86,12 @@ class FullSet:
         self.creation_time = datetime.datetime(*zf.infolist()[0].date_time)
 
         file_list = zf.namelist()
-        remove = ["tde-1980-2025-master/", 'tde-1980-2025-master/.gitignore']
+        remove = ["tde-1980-2025-master/", 'tde-1980-2025-master/.gitignore',
+                  'tde-1980-2025-master/---.json']
         file_list = [x for x in file_list if x not in remove]
 
         bn = set([])
+
         for name in file_list:
             with zf.open(name) as f:
                 data = f.read()
@@ -247,7 +249,8 @@ class FullSet:
             ("Max Absolute Magnitude", np.float),
             ("Max Luminosity", np.float),
             ("Luminosity Distance (Mpc)", np.float),
-            ("Category", "S50")
+            ("Category", "S50"),
+            ("Weight", np.float)
         ])
 
         table = np.zeros(self.total_entries, dtype=dt)
@@ -261,6 +264,7 @@ class FullSet:
 
         for i, name in enumerate(vars(self.TDEs)):
             tde = getattr(self.TDEs, name)
+
 
             if not np.isnan(tde.lastul):
                 window_start = float(tde.lastul)
@@ -281,6 +285,11 @@ class FullSet:
             else:
                 lum_d = Distance(z=float(tde.redshift_float)).to("Mpc").value
 
+            try:
+                weight = tde.weight.value
+            except AttributeError:
+                weight = np.nan
+
             # if str(tde.lumdist.u_value) == "Mpc":
             #     distance.append(tde.lumdist.value)
             # else:
@@ -295,7 +304,7 @@ class FullSet:
                 window_start, window_end, window_end - window_start,
                 tde.NED_ra, tde.NED_dec, tde.NED_redshift,
                 tde.app_mag_max, tde.abs_mag_max,  tde.lum, lum_d,
-                tde.tde_category
+                tde.tde_category, weight
             )], dtype=dt)
 
             tde_dict = dict()
@@ -322,7 +331,8 @@ class FullSet:
         headers = ["Name", "Category", "Redshift", "Luminosity Distance (Mpc)",
                    "RA", "Dec",
                    "Max Date", "Last Upper Limit",
-                   "Window Start Date", "Window End Date", "Window Length"
+                   "Window Start Date", "Window End Date", "Window Length",
+                   "Weight"
                    ]
 
         print "Of", len(self.data_table["Max Date"]), "entries, we remove",
@@ -870,6 +880,9 @@ class TDE_Candidate:
         hosts = []
         NED_hosts = []
         for name in to_check:
+
+            print "Checking", name
+
             entry = check_name(name)
             if entry is not None:
                 if len(entry["data_table"][entry["mask"]]) > 0:
@@ -890,10 +903,14 @@ class TDE_Candidate:
             entry = check_coordinate(self.ra_deg, self.dec_deg)
 
             if entry is not None:
+
+                val = jsonfile[0]["alias"]
+
                 candidate = entry["data_table"][entry["mask"]][0]
 
                 new_name = string.replace(candidate["Object Name"],
                                           " ", "")
+
 
                 try:
 

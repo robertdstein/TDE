@@ -259,7 +259,6 @@
             }
         ]
    },
-
    "F01004-2237": {
        "lastupperlim": [
            {
@@ -1872,6 +1871,13 @@
                 "source": 3,
                 "reason": "Jetted TDE."
             }
+        ],
+        "weight": [
+            {
+                "value": 5,
+                "source": 3,
+                "note": ">5 * 10 ** 6 solar mass BH"
+            }
         ]
     },
 
@@ -1902,6 +1908,13 @@
                 "source": 3,
                 "reason": "Jetted TDE."
             }
+        ],
+        "weight": [
+            {
+                "value": 8,
+                "source": 3,
+                "note": " < 8 * 10 ** 6 solar mass BH"
+            }
         ]
     },
 
@@ -1931,6 +1944,13 @@
                 "value": "jetted",
                 "source": 3,
                 "reason": "Jetted TDE."
+            }
+        ],
+        "weight": [
+            {
+                "value": 50,
+                "source": 3,
+                "note": " ~ 5 * 10 ** 7 solar mass BH"
             }
         ]
     },

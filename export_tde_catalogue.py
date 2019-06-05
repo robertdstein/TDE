@@ -70,6 +70,31 @@ def run(data):
         np.save(path, sources)
 
         print "Exporting catalogue with", np.sum(mask), "entries, to", path
+        
+    for category in set(data.data_table["Category"]):
+        print "Category =", category
+
+        mask = data.data_table["Category"] == category
+
+        tab = data.data_table[mask]
+
+        sources = np.empty(np.sum(mask), dtype=fs_custom_dtype)
+
+        sources['ra'] = np.deg2rad(tab["RA"])
+        sources['dec'] = np.deg2rad(tab["Dec"])
+        sources["Relative Injection Weight"] = np.ones_like(tab["Weight"])
+
+        sources['Distance (Mpc)'] = np.array(tab["Luminosity Distance (Mpc)"])
+        sources['Name'] = tab["Name"]
+        sources["Ref Time (MJD)"] = np.array(tab["Max Date"])
+        sources["Start Time (MJD)"] = np.array(
+            tab["Window Start Date"])
+        sources["End Time (MJD)"] = np.array(
+            tab["Window End Date"])
+        path = fs_core + "TDE_" + category + "_catalogue_weighted.npy"
+        np.save(path, sources)
+
+        print "Exporting catalogue with", np.sum(mask), "entries, to", path
 
     # Loops over catalogues to be created
     for catalogue_name, dictionary in export_catalogues.iteritems():
